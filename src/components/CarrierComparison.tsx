@@ -36,13 +36,15 @@ interface CarrierComparisonProps {
   coverageData?: any;
   homeZip?: string;
   workZip?: string;
+  switchingCosts?: any;
 }
 
 const CarrierComparison: React.FC<CarrierComparisonProps> = ({ 
   currentCarrier, 
   coverageData = null,
   homeZip = '',
-  workZip = ''
+  workZip = '',
+  switchingCosts = null
 }) => {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -40,7 +39,6 @@ const BillAnalysis = () => {
     setLineDetails(data);
     setLineDetailsComplete(true);
     
-    // Calculate switching costs
     const totalDevicePayments = data.lines.reduce((sum: number, line: any) => {
       return sum + (line.monthlyPayment * line.remainingPayments);
     }, 0);
@@ -56,7 +54,6 @@ const BillAnalysis = () => {
       lineCount: data.lines.length
     });
     
-    // Simulate bill analysis
     setAnalyzingBill(true);
     setTimeout(() => {
       setAnalyzingBill(false);
