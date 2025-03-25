@@ -30,15 +30,21 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
     }
   };
 
-  // Filter equipment by type
-  const getHandsets = (equipment: Equipment[] | undefined) => {
+  // Filter equipment by type and associated phone number
+  const getHandsets = (equipment: Equipment[] | undefined, phoneNumber: string) => {
     if (!equipment || equipment.length === 0) return [];
-    return equipment.filter(item => ['Phone', 'Watch', 'Tablet'].includes(item.type));
+    return equipment.filter(item => 
+      ['Phone', 'Watch', 'Tablet'].includes(item.type) && 
+      item.associatedPhoneNumber === phoneNumber
+    );
   };
 
-  const getAccessories = (equipment: Equipment[] | undefined) => {
+  const getAccessories = (equipment: Equipment[] | undefined, phoneNumber: string) => {
     if (!equipment || equipment.length === 0) return [];
-    return equipment.filter(item => item.type === 'Accessory');
+    return equipment.filter(item => 
+      item.type === 'Accessory' && 
+      item.associatedPhoneNumber === phoneNumber
+    );
   };
 
   // Calculate the total balance for all equipment items
@@ -62,9 +68,9 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
         </TableHeader>
         <TableBody>
           {lines.map((line, index) => {
-            // Split equipment into handsets and accessories
-            const handsets = getHandsets(line.equipment);
-            const accessories = getAccessories(line.equipment);
+            // Get equipment specific to this line
+            const handsets = getHandsets(line.equipment, line.phoneNumber);
+            const accessories = getAccessories(line.equipment, line.phoneNumber);
             
             // Calculate balances
             const handsetsBalance = calculateTotalBalance(handsets);
