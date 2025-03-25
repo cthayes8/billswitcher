@@ -17,18 +17,29 @@ import { Plus, Minus, Smartphone, DollarSign, Sparkles, Phone, Laptop, Watch } f
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
-const lineSchema = z.object({
-  lines: z.array(z.object({
-    deviceName: z.string().min(1, "Device name is required"),
-    phoneNumber: z.string().optional(),
-    lineType: z.string().optional(),
-    remainingPayments: z.number().min(0, "Must be 0 or greater"),
-    monthlyPayment: z.number().min(0, "Must be 0 or greater"),
-    totalBalance: z.number().min(0, "Must be 0 or greater"),
-  })),
+// Define the schema for equipment items
+const equipmentSchema = z.object({
+  deviceName: z.string().min(1, "Device name is required"),
+  type: z.enum(['Phone', 'Watch', 'Tablet', 'Accessory']),
+  monthlyPayment: z.number().min(0, "Must be 0 or greater"),
+  remainingPayments: z.number().min(0, "Must be 0 or greater"),
+  totalBalance: z.number().min(0, "Must be 0 or greater"),
 });
 
-type LineFormValues = z.infer<typeof lineSchema>;
+// Define the schema for a line
+const lineSchema = z.object({
+  phoneNumber: z.string().optional(),
+  lineType: z.string().optional(),
+  planName: z.string().optional(),
+  equipment: z.array(equipmentSchema).optional(),
+});
+
+// Define the form values type
+const formSchema = z.object({
+  lines: z.array(lineSchema),
+});
+
+type LineFormValues = z.infer<typeof formSchema>;
 
 interface Equipment {
   id: string;
@@ -61,32 +72,31 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
   
   // Prepare initial values
   const defaultValues = {
-    lines: initialData ? initialData.map(line => {
-      // Get the phone equipment if any
-      const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet');
-      
-      return {
-        deviceName: line.deviceName || '',
-        phoneNumber: line.phoneNumber || '',
-        lineType: line.lineType || '',
-        remainingPayments: phoneEquipment?.remainingPayments || 0,
-        monthlyPayment: phoneEquipment?.monthlyPayment || 0,
-        totalBalance: phoneEquipment?.totalBalance || 0,
-      };
-    }) : [
+    lines: initialData ? initialData.map(line => ({
+      phoneNumber: line.phoneNumber || '',
+      lineType: line.lineType || '',
+      planName: line.planName || '',
+      equipment: line.equipment || [],
+    })) : [
       {
-        deviceName: '',
         phoneNumber: '',
         lineType: '',
-        remainingPayments: 0,
-        monthlyPayment: 0,
-        totalBalance: 0,
+        planName: '',
+        equipment: [
+          {
+            deviceName: '',
+            type: 'Phone' as const,
+            monthlyPayment: 0,
+            remainingPayments: 0,
+            totalBalance: 0,
+          }
+        ],
       }
     ]
   };
   
   const form = useForm<LineFormValues>({
-    resolver: zodResolver(lineSchema),
+    resolver: zodResolver(formSchema),
     defaultValues,
   });
   
@@ -96,14 +106,49 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
     name: "lines",
   });
   
+  // Helper function to add equipment to a line
+  const addEquipment = (lineIndex: number) => {
+    const currentEquipment = form.getValues().lines[lineIndex].equipment || [];
+    form.setValue(`lines.${lineIndex}.equipment`, [
+      ...currentEquipment,
+      {
+        deviceName: '',
+        type: 'Accessory' as const,
+        monthlyPayment: 0,
+        remainingPayments: 0,
+        totalBalance: 0,
+      }
+    ]);
+  };
+  
+  // Helper function to remove equipment from a line
+  const removeEquipment = (lineIndex: number, equipmentIndex: number) => {
+    const currentEquipment = form.getValues().lines[lineIndex].equipment || [];
+    if (currentEquipment.length > 1) {
+      form.setValue(`lines.${lineIndex}.equipment`, currentEquipment.filter((_, i) => i !== equipmentIndex));
+    } else {
+      toast({
+        title: "Cannot remove equipment",
+        description: "You need at least one equipment item per line",
+        variant: "destructive",
+      });
+    }
+  };
+  
   const addLine = () => {
     append({
-      deviceName: '',
       phoneNumber: '',
       lineType: '',
-      remainingPayments: 0,
-      monthlyPayment: 0,
-      totalBalance: 0,
+      planName: '',
+      equipment: [
+        {
+          deviceName: '',
+          type: 'Phone' as const,
+          monthlyPayment: 0,
+          remainingPayments: 0,
+          totalBalance: 0,
+        }
+      ],
     });
   };
   
@@ -141,14 +186,16 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
     }
   };
 
-  const getDeviceIcon = (device: string = '') => {
-    const deviceLower = device.toLowerCase();
-    if (deviceLower.includes('watch')) {
-      return <Watch size={16} className="mr-1 text-purple-600" />;
-    } else if (deviceLower.includes('ipad') || deviceLower.includes('tablet')) {
-      return <Laptop size={16} className="mr-1 text-green-600" />;
-    } else {
-      return <Smartphone size={16} className="mr-1 text-primary" />;
+  const getDeviceIcon = (deviceType: string = 'Phone') => {
+    switch (deviceType) {
+      case 'Watch':
+        return <Watch size={16} className="mr-1 text-purple-600" />;
+      case 'Tablet':
+        return <Laptop size={16} className="mr-1 text-green-600" />;
+      case 'Accessory':
+        return <DollarSign size={16} className="mr-1 text-amber-600" />;
+      default:
+        return <Smartphone size={16} className="mr-1 text-primary" />;
     }
   };
 
@@ -176,22 +223,22 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {fields.map((field, index) => (
+          {fields.map((field, lineIndex) => (
             <div key={field.id} className="p-4 border border-gray-100 rounded-lg">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <h3 className="font-medium">Line {index + 1}</h3>
+                  <h3 className="font-medium">Line {lineIndex + 1}</h3>
                   
-                  {form.getValues().lines[index].phoneNumber && (
-                    <div className="text-sm text-gray-500 flex items-center">
+                  {form.getValues().lines[lineIndex].phoneNumber && (
+                    <div className="text-sm text-blue-600 flex items-center">
                       <Phone size={14} className="mr-1" />
-                      {form.getValues().lines[index].phoneNumber}
+                      {form.getValues().lines[lineIndex].phoneNumber}
                     </div>
                   )}
                   
-                  {form.getValues().lines[index].lineType && (
-                    <Badge className={`${getLineTypeColor(form.getValues().lines[index].lineType)}`}>
-                      {form.getValues().lines[index].lineType}
+                  {form.getValues().lines[lineIndex].lineType && (
+                    <Badge className={`${getLineTypeColor(form.getValues().lines[lineIndex].lineType)}`}>
+                      {form.getValues().lines[lineIndex].lineType}
                     </Badge>
                   )}
                 </div>
@@ -200,7 +247,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
                   type="button" 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => removeLine(index)}
+                  onClick={() => removeLine(lineIndex)}
                   disabled={fields.length === 1}
                 >
                   <Minus size={16} className="mr-1" />
@@ -208,10 +255,10 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <FormField
                   control={form.control}
-                  name={`lines.${index}.phoneNumber`}
+                  name={`lines.${lineIndex}.phoneNumber`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
@@ -230,17 +277,12 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
                 
                 <FormField
                   control={form.control}
-                  name={`lines.${index}.deviceName`}
+                  name={`lines.${lineIndex}.lineType`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <Smartphone size={16} />
-                          <span>Device</span>
-                        </div>
-                      </FormLabel>
+                      <FormLabel>Line Type</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. iPhone 14 Pro" {...field} />
+                        <Input placeholder="e.g. Voice, Wearable" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -249,72 +291,174 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
                 
                 <FormField
                   control={form.control}
-                  name={`lines.${index}.remainingPayments`}
+                  name={`lines.${lineIndex}.planName`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Remaining Payments</FormLabel>
+                      <FormLabel>Plan</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="0" 
-                          {...field}
-                          onChange={e => field.onChange(Number(e.target.value))}
-                        />
+                        <Input placeholder="e.g. Unlimited" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Equipment & Installments</h4>
                 
-                <FormField
-                  control={form.control}
-                  name={`lines.${index}.monthlyPayment`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <DollarSign size={16} />
-                          <span>Monthly Payment</span>
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="0.00" 
-                          {...field}
-                          onChange={e => field.onChange(Number(e.target.value))}
-                          step="0.01"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`lines.${index}.totalBalance`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <DollarSign size={16} />
-                          <span>Total Balance</span>
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="0.00" 
-                          {...field}
-                          onChange={e => field.onChange(Number(e.target.value))}
-                          step="0.01"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Equipment fields */}
+                {form.getValues().lines[lineIndex].equipment?.map((_, equipmentIndex) => (
+                  <div key={equipmentIndex} className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-3">
+                      <h5 className="text-sm font-medium flex items-center">
+                        {getDeviceIcon(form.getValues().lines[lineIndex].equipment?.[equipmentIndex]?.type || 'Phone')}
+                        Equipment {equipmentIndex + 1}
+                      </h5>
+                      
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeEquipment(lineIndex, equipmentIndex)}
+                        disabled={(form.getValues().lines[lineIndex].equipment?.length || 0) <= 1}
+                      >
+                        <Minus size={14} className="mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`lines.${lineIndex}.equipment.${equipmentIndex}.deviceName`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Device Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g. iPhone 14 Pro" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`lines.${lineIndex}.equipment.${equipmentIndex}.type`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Device Type</FormLabel>
+                            <FormControl>
+                              <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={field.value}
+                                onChange={e => field.onChange(e.target.value)}
+                              >
+                                <option value="Phone">Phone</option>
+                                <option value="Watch">Watch</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Accessory">Accessory</option>
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`lines.${lineIndex}.equipment.${equipmentIndex}.monthlyPayment`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Monthly Payment</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0.00"
+                                {...field}
+                                onChange={e => {
+                                  field.onChange(Number(e.target.value));
+                                  // Auto-calculate balance based on monthly payment and remaining payments
+                                  const remainingPayments = form.getValues().lines[lineIndex].equipment?.[equipmentIndex]?.remainingPayments || 0;
+                                  if (remainingPayments > 0) {
+                                    const balance = Number(e.target.value) * remainingPayments;
+                                    form.setValue(`lines.${lineIndex}.equipment.${equipmentIndex}.totalBalance`, balance);
+                                  }
+                                }}
+                                step="0.01"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`lines.${lineIndex}.equipment.${equipmentIndex}.remainingPayments`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Remaining Payments</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                {...field}
+                                onChange={e => {
+                                  field.onChange(Number(e.target.value));
+                                  // Auto-calculate balance based on monthly payment and remaining payments
+                                  const monthlyPayment = form.getValues().lines[lineIndex].equipment?.[equipmentIndex]?.monthlyPayment || 0;
+                                  if (monthlyPayment > 0) {
+                                    const balance = monthlyPayment * Number(e.target.value);
+                                    form.setValue(`lines.${lineIndex}.equipment.${equipmentIndex}.totalBalance`, balance);
+                                  }
+                                }}
+                                min="0"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`lines.${lineIndex}.equipment.${equipmentIndex}.totalBalance`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center">
+                              <DollarSign size={16} className="mr-1 text-red-600" />
+                              <span>Total Balance</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                className="text-red-600 font-medium"
+                                placeholder="0.00"
+                                {...field}
+                                onChange={e => field.onChange(Number(e.target.value))}
+                                step="0.01"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                ))}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addEquipment(lineIndex)}
+                  className="w-full mt-2"
+                >
+                  <Plus size={14} className="mr-1" />
+                  Add Another Device or Accessory
+                </Button>
               </div>
             </div>
           ))}

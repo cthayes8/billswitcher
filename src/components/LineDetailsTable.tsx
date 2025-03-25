@@ -8,7 +8,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Smartphone, Laptop, Watch } from 'lucide-react';
+import { Smartphone, Laptop, Watch, DollarSign } from 'lucide-react';
 import { LineData, Equipment } from '@/interfaces/BillTypes';
 
 interface LineDetailsTableProps {
@@ -22,6 +22,19 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
     return equipment.filter(item => types.includes(item.type));
   };
 
+  const getDeviceIcon = (type: string) => {
+    switch(type) {
+      case 'Phone':
+        return <Smartphone size={14} className="mr-1 text-primary" />;
+      case 'Watch':
+        return <Watch size={14} className="mr-1 text-purple-500" />;
+      case 'Tablet':
+        return <Laptop size={14} className="mr-1 text-green-500" />;
+      default:
+        return <Smartphone size={14} className="mr-1 text-primary" />;
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -31,53 +44,41 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
             <TableHead>Line Type</TableHead>
             <TableHead>Plan</TableHead>
             <TableHead>Data Usage</TableHead>
-            <TableHead>Handset</TableHead>
-            <TableHead>Accessories</TableHead>
+            <TableHead>Equipment & Installments</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {lines.map((line, index) => {
-            const handsets = getEquipmentByType(line.equipment, ['Phone', 'Watch', 'Tablet']);
-            const accessories = getEquipmentByType(line.equipment, ['Accessory']);
+            // Combine all equipment for better visibility
+            const allEquipment = line.equipment || [];
             
             return (
               <TableRow key={index}>
-                <TableCell className="font-medium">{line.phoneNumber}</TableCell>
+                <TableCell className="font-medium text-blue-600">{line.phoneNumber}</TableCell>
                 <TableCell>{line.lineType}</TableCell>
                 <TableCell>{line.planName}</TableCell>
                 <TableCell>{line.dataUsage.toFixed(2)} GB</TableCell>
                 <TableCell>
-                  {handsets.length > 0 ? (
-                    <div className="space-y-1">
-                      {handsets.map((eq, i) => (
-                        <div key={i} className="flex items-center text-sm">
-                          {eq.type === 'Phone' ? (
-                            <Smartphone size={12} className="mr-1 text-primary" />
-                          ) : eq.type === 'Watch' ? (
-                            <Watch size={12} className="mr-1 text-purple-500" />
-                          ) : (
-                            <Laptop size={12} className="mr-1 text-green-500" />
-                          )}
-                          <span className="mr-2">{eq.deviceName}</span>
-                          <span className="font-medium ml-auto text-green-700">${eq.totalBalance.toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">None</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {accessories.length > 0 ? (
-                    <div className="space-y-1">
-                      {accessories.map((acc, i) => (
-                        <div key={i} className="flex items-center text-sm">
-                          <span className="mr-2 truncate" title={acc.deviceName}>
-                            {acc.deviceName.length > 25 
-                              ? acc.deviceName.substring(0, 25) + '...' 
-                              : acc.deviceName}
-                          </span>
-                          <span className="font-medium ml-auto text-green-700">${acc.totalBalance.toFixed(2)}</span>
+                  {allEquipment.length > 0 ? (
+                    <div className="space-y-3">
+                      {allEquipment.map((eq, i) => (
+                        <div key={i} className="border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                          <div className="flex items-center mb-1">
+                            {getDeviceIcon(eq.type)}
+                            <span className="font-medium">{eq.deviceName}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm pl-5">
+                            <div className="text-gray-600">Monthly payment:</div>
+                            <div className="font-medium">${eq.monthlyPayment.toFixed(2)}</div>
+                            
+                            <div className="text-gray-600">Remaining payments:</div>
+                            <div className="font-medium">
+                              {eq.remainingPayments} of {eq.type === 'Phone' || eq.type === 'Watch' ? '24' : '12'}
+                            </div>
+                            
+                            <div className="text-gray-600">Balance:</div>
+                            <div className="font-medium text-red-600">${eq.totalBalance.toFixed(2)}</div>
+                          </div>
                         </div>
                       ))}
                     </div>
