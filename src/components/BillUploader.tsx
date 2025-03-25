@@ -79,7 +79,6 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
   };
 
   const handleFiles = (file: File) => {
-    // Check if the file is a PDF or image (common bill formats)
     const fileType = file.type.toLowerCase();
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic'];
     
@@ -92,7 +91,6 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
       return;
     }
     
-    // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -110,12 +108,10 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     setUploadStatus('uploading');
     setUploadProgress(0);
     
-    // Simulate upload progress
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          // Start AI analysis after upload completes
           analyzeDocument(file);
           return 100;
         }
@@ -127,16 +123,14 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
   const analyzeDocument = (file: File) => {
     setUploadStatus('analyzing');
     
-    // Simulate AI analysis of the document
     setTimeout(() => {
-      // Mock data extraction based on the sample bill provided
       const mockEquipmentData: Equipment[] = [
         {
           id: "20241205110531258",
           deviceName: "iPhone 16 Pro - White Titanium - 256GB",
           monthlyPayment: 45.84,
           remainingPayments: 20,
-          totalBalance: 962.47,
+          totalBalance: 916.80,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Phone"
         },
@@ -145,7 +139,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
           monthlyPayment: 50.00,
           remainingPayments: 20,
-          totalBalance: 1049.99,
+          totalBalance: 1000.00,
           associatedPhoneNumber: "(720) 394-1781",
           type: "Phone"
         },
@@ -154,7 +148,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "Watch Ultra 49mm",
           monthlyPayment: 33.34,
           remainingPayments: 4,
-          totalBalance: 166.53,
+          totalBalance: 133.36,
           associatedPhoneNumber: "(954) 393-2341",
           type: "Watch"
         },
@@ -163,7 +157,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "Watch Series 8 41mm",
           monthlyPayment: 20.84,
           remainingPayments: 4,
-          totalBalance: 104.03,
+          totalBalance: 83.36,
           associatedPhoneNumber: "(954) 393-2478",
           type: "Watch"
         },
@@ -172,7 +166,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "iPad Pro 13-inch (M4)",
           monthlyPayment: 30.00,
           remainingPayments: 11,
-          totalBalance: 349.42,
+          totalBalance: 330.00,
           associatedPhoneNumber: "(754) 262-7874",
           type: "Tablet"
         },
@@ -181,7 +175,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "Apple AirPods 4 with Active Noise Cancellation",
           monthlyPayment: 15.00,
           remainingPayments: 8,
-          totalBalance: 134.99,
+          totalBalance: 120.00,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory"
         },
@@ -190,7 +184,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "GoTo™ Tempered Glass Screen Protector for Apple iPhone 16 Pro",
           monthlyPayment: 3.34,
           remainingPayments: 8,
-          totalBalance: 29.97,
+          totalBalance: 26.72,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory"
         },
@@ -199,8 +193,8 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "Apple Silicone Case with MagSafe for Apple iPhone 16 Pro Max",
           monthlyPayment: 4.17,
           remainingPayments: 9,
-          totalBalance: 41.65,
-          associatedPhoneNumber: "(908) 764-1876",
+          totalBalance: 37.53,
+          associatedPhoneNumber: "(720) 394-1781",
           type: "Accessory"
         },
         {
@@ -208,7 +202,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "Apple Clear Case with MagSafe for Apple iPhone 16 Pro",
           monthlyPayment: 4.17,
           remainingPayments: 9,
-          totalBalance: 41.65,
+          totalBalance: 37.53,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory"
         },
@@ -217,13 +211,12 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           deviceName: "Apple Watch Magnetic Fast Charger to USB-C Cable, 1m",
           monthlyPayment: 2.50,
           remainingPayments: 9,
-          totalBalance: 24.99,
-          associatedPhoneNumber: "(908) 764-1876",
+          totalBalance: 22.50,
+          associatedPhoneNumber: "(954) 393-2341",
           type: "Accessory"
         }
       ];
 
-      // Organize equipment by phone number for the lines
       const equipmentByPhoneNumber: Record<string, Equipment[]> = {};
       mockEquipmentData.forEach(equipment => {
         if (!equipmentByPhoneNumber[equipment.associatedPhoneNumber]) {
@@ -232,70 +225,55 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         equipmentByPhoneNumber[equipment.associatedPhoneNumber].push(equipment);
       });
 
+      const allPhoneNumbers = [
+        "(908) 764-1876",
+        "(720) 394-1781",
+        "(954) 393-2341",
+        "(954) 393-2478",
+        "(754) 262-7874",
+        "(212) 555-1234",
+        "(312) 555-6789",
+        "(415) 555-7890",
+        "(305) 555-4321"
+      ];
+
+      const allLines: LineData[] = allPhoneNumbers.map((phoneNumber, index) => {
+        const phoneEquipment = equipmentByPhoneNumber[phoneNumber]?.find(eq => 
+          eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet'
+        );
+
+        const lineType = phoneNumber.includes("555") ? "Voice" : 
+                        phoneEquipment?.type === "Watch" ? "Wearable" : 
+                        phoneEquipment?.type === "Tablet" ? "Mobile Internet" : "Voice";
+
+        return {
+          phoneNumber: phoneNumber,
+          deviceName: phoneEquipment?.deviceName || "Bring Your Own Device",
+          lineType: lineType,
+          planName: lineType === "Voice" ? "Magenta MAX" : 
+                    lineType === "Wearable" ? "Wearable Plan" : "Mobile Internet Plan",
+          monthlyCharge: lineType === "Voice" ? 85.00 : 
+                        lineType === "Wearable" ? 10.00 : 20.00,
+          dataUsage: lineType === "Voice" ? Math.random() * 10 + 2 : 
+                    lineType === "Wearable" ? Math.random() * 0.5 : 
+                    Math.random() * 5 + 1,
+          equipment: equipmentByPhoneNumber[phoneNumber] || [],
+          earlyTerminationFee: 0
+        };
+      });
+
       const mockAnalyzedData: BillData = {
-        carrier: "AT&T",
+        carrier: "T-Mobile",
         accountNumber: "123456789",
         billDate: "2023-08-15",
-        totalAmount: 242.52,
+        totalAmount: 542.52,
         dueDate: "2023-09-01",
-        planCosts: 140.00,
-        equipmentCosts: 85.17,
+        planCosts: 340.00,
+        equipmentCosts: 185.17,
         servicesCosts: 17.35,
-        lines: [
-          {
-            phoneNumber: "(908) 764-1876",
-            deviceName: "iPhone 16 Pro - White Titanium - 256GB",
-            lineType: "Voice",
-            planName: "Unlimited Plus",
-            monthlyCharge: 55.00,
-            dataUsage: 9.8,
-            equipment: equipmentByPhoneNumber["(908) 764-1876"] || [],
-            earlyTerminationFee: 150,
-          },
-          {
-            phoneNumber: "(720) 394-1781",
-            deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
-            lineType: "Voice",
-            planName: "Unlimited Basic",
-            monthlyCharge: 45.00,
-            dataUsage: 6.2,
-            equipment: equipmentByPhoneNumber["(720) 394-1781"] || [],
-            earlyTerminationFee: 0,
-          },
-          {
-            phoneNumber: "(954) 393-2341",
-            deviceName: "Watch Ultra 49mm",
-            lineType: "Wearable",
-            planName: "Wearable Plan",
-            monthlyCharge: 10.00,
-            dataUsage: 0.3,
-            equipment: equipmentByPhoneNumber["(954) 393-2341"] || [],
-            earlyTerminationFee: 75,
-          },
-          {
-            phoneNumber: "(954) 393-2478",
-            deviceName: "Watch Series 8 41mm",
-            lineType: "Wearable",
-            planName: "Wearable Plan",
-            monthlyCharge: 10.00,
-            dataUsage: 0.2,
-            equipment: equipmentByPhoneNumber["(954) 393-2478"] || [],
-            earlyTerminationFee: 50,
-          },
-          {
-            phoneNumber: "(754) 262-7874",
-            deviceName: "iPad Pro 13-inch (M4)",
-            lineType: "Mobile Internet",
-            planName: "Mobile Internet Plan",
-            monthlyCharge: 20.00,
-            dataUsage: 5.7,
-            equipment: equipmentByPhoneNumber["(754) 262-7874"] || [],
-            earlyTerminationFee: 100,
-          }
-        ]
+        lines: allLines
       };
 
-      // Success! Send the data back
       setUploadStatus('success');
       onUploadComplete(file.name, mockAnalyzedData);
 
@@ -303,7 +281,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         title: "Bill analysis complete",
         description: `Found ${mockAnalyzedData.lines.length} lines on your ${mockAnalyzedData.carrier} account`,
       });
-    }, 3000); // Simulate 3 seconds of AI processing
+    }, 3000);
   };
 
   const resetUpload = () => {

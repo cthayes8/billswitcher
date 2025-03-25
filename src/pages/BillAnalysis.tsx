@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -72,7 +73,7 @@ const BillAnalysis = () => {
       
       const lineFormData = {
         lines: analyzedData.lines.map((line: LineData) => {
-          const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone');
+          const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet');
           
           return {
             deviceName: line.deviceName,
@@ -80,7 +81,7 @@ const BillAnalysis = () => {
             lineType: line.lineType,
             remainingPayments: phoneEquipment?.remainingPayments || 0,
             monthlyPayment: phoneEquipment?.monthlyPayment || 0,
-            earlyTerminationFee: line.earlyTerminationFee,
+            totalBalance: phoneEquipment?.totalBalance || 0,
           };
         })
       };
@@ -95,14 +96,10 @@ const BillAnalysis = () => {
         }, 0);
       }, 0);
       
-      const totalTerminationFees = analyzedData.lines.reduce((sum: number, line: LineData) => {
-        return sum + line.earlyTerminationFee;
-      }, 0);
-      
       setSwitchingCosts({
         devicePayments: totalDevicePayments,
-        terminationFees: totalTerminationFees,
-        total: totalDevicePayments + totalTerminationFees,
+        terminationFees: 0, // No ETF for T-Mobile
+        total: totalDevicePayments,
         lineCount: analyzedData.lines.length
       });
     }
@@ -130,17 +127,13 @@ const BillAnalysis = () => {
     setLineDetailsComplete(true);
     
     const totalDevicePayments = data.lines.reduce((sum: number, line: any) => {
-      return sum + (line.monthlyPayment * line.remainingPayments);
-    }, 0);
-    
-    const totalTerminationFees = data.lines.reduce((sum: number, line: any) => {
-      return sum + line.earlyTerminationFee;
+      return sum + (line.totalBalance || (line.monthlyPayment * line.remainingPayments));
     }, 0);
     
     setSwitchingCosts({
       devicePayments: totalDevicePayments,
-      terminationFees: totalTerminationFees,
-      total: totalDevicePayments + totalTerminationFees,
+      terminationFees: 0, // No ETF for T-Mobile
+      total: totalDevicePayments,
       lineCount: data.lines.length
     });
     
@@ -264,7 +257,7 @@ const BillAnalysis = () => {
                             ))}
                             <div className="border-t pt-1 flex justify-between text-sm font-semibold">
                               <span>Total Lines:</span>
-                              <span>{switchingCosts.lineCount}</span>
+                              <span>{switchingCosts?.lineCount || 0}</span>
                             </div>
                           </div>
                         </div>
@@ -297,7 +290,6 @@ const BillAnalysis = () => {
                                 <TableHead>Data Usage</TableHead>
                                 <TableHead>Handset</TableHead>
                                 <TableHead>Accessories</TableHead>
-                                <TableHead>ETF</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -310,7 +302,7 @@ const BillAnalysis = () => {
                                     <TableCell className="font-medium">{line.phoneNumber}</TableCell>
                                     <TableCell>{line.lineType}</TableCell>
                                     <TableCell>{line.planName}</TableCell>
-                                    <TableCell>{line.dataUsage} GB</TableCell>
+                                    <TableCell>{line.dataUsage.toFixed(1)} GB</TableCell>
                                     <TableCell>
                                       {handsets.length > 0 ? (
                                         <div className="space-y-1">
@@ -350,13 +342,6 @@ const BillAnalysis = () => {
                                         <span className="text-gray-400">None</span>
                                       )}
                                     </TableCell>
-                                    <TableCell className="text-right">
-                                      {line.earlyTerminationFee > 0 ? (
-                                        <span className="font-medium text-red-600">${line.earlyTerminationFee.toFixed(2)}</span>
-                                      ) : (
-                                        <span className="text-gray-400">$0</span>
-                                      )}
-                                    </TableCell>
                                   </TableRow>
                                 );
                               })}
@@ -368,7 +353,7 @@ const BillAnalysis = () => {
                     
                     <div className="mt-6 p-4 bg-amber-50 rounded-lg">
                       <h3 className="font-medium mb-2">Switching Costs</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="bg-white rounded-lg p-3 border border-gray-100">
                           <div className="text-xs text-gray-500">Number of Lines</div>
                           <div className="flex items-center mt-1">
@@ -381,13 +366,6 @@ const BillAnalysis = () => {
                           <div className="flex items-center mt-1">
                             <DollarSign size={16} className="text-gray-400 mr-1" />
                             <span className="text-lg font-semibold">${switchingCosts?.devicePayments.toFixed(2) || '0.00'}</span>
-                          </div>
-                        </div>
-                        <div className="bg-white rounded-lg p-3 border border-gray-100">
-                          <div className="text-xs text-gray-500">Termination Fees</div>
-                          <div className="flex items-center mt-1">
-                            <DollarSign size={16} className="text-gray-400 mr-1" />
-                            <span className="text-lg font-semibold">${switchingCosts?.terminationFees.toFixed(2) || '0.00'}</span>
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-3 border border-gray-100">

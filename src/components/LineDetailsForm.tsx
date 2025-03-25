@@ -25,7 +25,6 @@ const lineSchema = z.object({
     remainingPayments: z.number().min(0, "Must be 0 or greater"),
     monthlyPayment: z.number().min(0, "Must be 0 or greater"),
     totalBalance: z.number().min(0, "Must be 0 or greater"),
-    earlyTerminationFee: z.number().min(0, "Must be 0 or greater"),
   })),
 });
 
@@ -73,7 +72,6 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
         remainingPayments: phoneEquipment?.remainingPayments || 0,
         monthlyPayment: phoneEquipment?.monthlyPayment || 0,
         totalBalance: phoneEquipment?.totalBalance || 0,
-        earlyTerminationFee: line.earlyTerminationFee || 0,
       };
     }) : [
       {
@@ -83,7 +81,6 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
         remainingPayments: 0,
         monthlyPayment: 0,
         totalBalance: 0,
-        earlyTerminationFee: 0,
       }
     ]
   };
@@ -107,7 +104,6 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
       remainingPayments: 0,
       monthlyPayment: 0,
       totalBalance: 0,
-      earlyTerminationFee: 0,
     });
   };
   
@@ -173,7 +169,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
         </div>
       ) : (
         <p className="text-gray-600 mb-6">
-          Tell us about each line on your bill, including device payment plans and any early termination fees.
+          Tell us about each line on your bill, including device payment plans.
           This helps us calculate the true cost of switching.
         </p>
       )}
@@ -304,31 +300,6 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
                         <div className="flex items-center space-x-2">
                           <DollarSign size={16} />
                           <span>Total Balance</span>
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="0.00" 
-                          {...field}
-                          onChange={e => field.onChange(Number(e.target.value))}
-                          step="0.01"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name={`lines.${index}.earlyTerminationFee`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <DollarSign size={16} />
-                          <span>Early Termination Fee</span>
                         </div>
                       </FormLabel>
                       <FormControl>
