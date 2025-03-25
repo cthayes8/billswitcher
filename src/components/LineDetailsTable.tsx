@@ -33,6 +33,8 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
   // Filter equipment by type and associated phone number
   const getHandsets = (equipment: Equipment[] | undefined, phoneNumber: string) => {
     if (!equipment || equipment.length === 0) return [];
+    
+    // Make sure to only include equipment specifically associated with this phone number
     return equipment.filter(item => 
       ['Phone', 'Watch', 'Tablet'].includes(item.type) && 
       item.associatedPhoneNumber === phoneNumber
@@ -41,6 +43,8 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
 
   const getAccessories = (equipment: Equipment[] | undefined, phoneNumber: string) => {
     if (!equipment || equipment.length === 0) return [];
+    
+    // Make sure to only include accessories specifically associated with this phone number
     return equipment.filter(item => 
       item.type === 'Accessory' && 
       item.associatedPhoneNumber === phoneNumber
