@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -302,7 +301,7 @@ const BillAnalysis = () => {
                                     <TableCell className="font-medium">{line.phoneNumber}</TableCell>
                                     <TableCell>{line.lineType}</TableCell>
                                     <TableCell>{line.planName}</TableCell>
-                                    <TableCell>{line.dataUsage.toFixed(1)} GB</TableCell>
+                                    <TableCell>{line.dataUsage.toFixed(2)} GB</TableCell>
                                     <TableCell>
                                       {handsets.length > 0 ? (
                                         <div className="space-y-1">
@@ -397,3 +396,4 @@ const BillAnalysis = () => {
 };
 
 export default BillAnalysis;
+

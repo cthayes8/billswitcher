@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, File, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
@@ -225,26 +226,29 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         equipmentByPhoneNumber[equipment.associatedPhoneNumber].push(equipment);
       });
 
-      const allPhoneNumbers = [
-        "(908) 764-1876",
-        "(720) 394-1781",
-        "(954) 393-2341",
-        "(954) 393-2478",
-        "(754) 262-7874",
-        "(212) 555-1234",
-        "(312) 555-6789",
-        "(415) 555-7890",
-        "(305) 555-4321"
-      ];
+      // Accurate data usage for each line based on the bill images
+      const phoneNumberToDataUsage: Record<string, number> = {
+        "(720) 935-9692": 27.29,
+        "(908) 764-1876": 18.42,
+        "(720) 394-1781": 11.13,
+        "(720) 998-3263": 4.61,
+        "(754) 249-8647": 1.97,
+        "(720) 935-9642": 1.80,
+        "(954) 393-2478": 0.04,
+        "(754) 262-7874": 0.00,
+        "(954) 393-2341": 0.00
+      };
 
-      const allLines: LineData[] = allPhoneNumbers.map((phoneNumber, index) => {
+      const allPhoneNumbers = Object.keys(phoneNumberToDataUsage);
+      
+      const allLines: LineData[] = allPhoneNumbers.map((phoneNumber) => {
         const phoneEquipment = equipmentByPhoneNumber[phoneNumber]?.find(eq => 
           eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet'
         );
 
-        const lineType = phoneNumber.includes("555") ? "Voice" : 
-                        phoneEquipment?.type === "Watch" ? "Wearable" : 
-                        phoneEquipment?.type === "Tablet" ? "Mobile Internet" : "Voice";
+        const lineType = phoneNumber.includes("262-7874") ? "Mobile Internet" : 
+                        (phoneNumber.includes("393-2341") || phoneNumber.includes("393-2478")) ? "Wearable" : 
+                        "Voice";
 
         return {
           phoneNumber: phoneNumber,
@@ -254,9 +258,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
                     lineType === "Wearable" ? "Wearable Plan" : "Mobile Internet Plan",
           monthlyCharge: lineType === "Voice" ? 85.00 : 
                         lineType === "Wearable" ? 10.00 : 20.00,
-          dataUsage: lineType === "Voice" ? Math.random() * 10 + 2 : 
-                    lineType === "Wearable" ? Math.random() * 0.5 : 
-                    Math.random() * 5 + 1,
+          dataUsage: phoneNumberToDataUsage[phoneNumber] || 0,
           equipment: equipmentByPhoneNumber[phoneNumber] || [],
           earlyTerminationFee: 0
         };
