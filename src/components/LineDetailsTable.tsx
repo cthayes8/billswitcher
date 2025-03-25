@@ -9,27 +9,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Smartphone, Laptop, Watch } from 'lucide-react';
-
-interface Equipment {
-  id: string;
-  deviceName: string;
-  monthlyPayment: number;
-  remainingPayments: number;
-  totalBalance: number;
-  associatedPhoneNumber: string;
-  type: 'Phone' | 'Watch' | 'Tablet' | 'Accessory';
-}
-
-interface LineData {
-  phoneNumber: string;
-  deviceName: string;
-  lineType: string;
-  planName: string;
-  monthlyCharge: number;
-  dataUsage: number;
-  equipment?: Equipment[];
-  earlyTerminationFee: number;
-}
+import { LineData, Equipment } from '@/interfaces/BillTypes';
 
 interface LineDetailsTableProps {
   lines: LineData[];

@@ -1,43 +1,10 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, File, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-
-interface Equipment {
-  id: string;
-  deviceName: string;
-  monthlyPayment: number;
-  remainingPayments: number;
-  totalBalance: number;
-  associatedPhoneNumber: string;
-  type: 'Phone' | 'Watch' | 'Tablet' | 'Accessory';
-}
-
-interface LineData {
-  phoneNumber: string;
-  deviceName: string;
-  lineType: string;
-  planName: string;
-  monthlyCharge: number;
-  dataUsage: number;
-  equipment?: Equipment[];
-  earlyTerminationFee: number;
-}
-
-interface BillData {
-  carrier: string;
-  accountNumber: string;
-  billDate: string;
-  totalAmount: number;
-  dueDate: string;
-  planCosts: number;
-  equipmentCosts: number;
-  servicesCosts: number;
-  lines: LineData[];
-}
+import { BillData } from '@/interfaces/BillTypes';
 
 interface BillUploaderProps {
   onUploadComplete: (fileName: string, analyzedData?: BillData) => void;
@@ -125,7 +92,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     setUploadStatus('analyzing');
     
     setTimeout(() => {
-      const mockEquipmentData: Equipment[] = [
+      const mockEquipmentData = [
         {
           id: "20241205110531258",
           deviceName: "iPhone 16 Pro - White Titanium - 256GB",
@@ -218,7 +185,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         }
       ];
 
-      const equipmentByPhoneNumber: Record<string, Equipment[]> = {};
+      const equipmentByPhoneNumber = {};
       mockEquipmentData.forEach(equipment => {
         if (!equipmentByPhoneNumber[equipment.associatedPhoneNumber]) {
           equipmentByPhoneNumber[equipment.associatedPhoneNumber] = [];
@@ -226,8 +193,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         equipmentByPhoneNumber[equipment.associatedPhoneNumber].push(equipment);
       });
 
-      // Accurate data usage for each line based on the bill images
-      const phoneNumberToDataUsage: Record<string, number> = {
+      const phoneNumberToDataUsage = {
         "(720) 935-9692": 27.29,
         "(908) 764-1876": 18.42,
         "(720) 394-1781": 11.13,
@@ -239,16 +205,31 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         "(954) 393-2341": 0.00
       };
 
+      const phoneNumberToLineCosts = {
+        "Account": { plans: 42.50, equipment: 0, services: 0.00, total: 42.50 },
+        "(908) 764-1876": { plans: 0, equipment: 46.47, services: 0, total: 46.47 },
+        "(720) 935-9642": { plans: 0, equipment: 0, services: 0, total: 0.00 },
+        "(720) 394-1781": { plans: 11.25, equipment: 16.25, services: 0, total: 27.50 },
+        "(720) 935-9692": { plans: 11.25, equipment: 0, services: 19.26, total: 30.51 },
+        "(720) 998-3263": { plans: 11.25, equipment: 0, services: 0, total: 11.25 },
+        "(954) 393-2341": { plans: 1.87, equipment: 24.96, services: 0, total: 26.83 },
+        "(954) 393-2478": { plans: 3.75, equipment: 12.46, services: 0, total: 16.21 },
+        "(754) 249-8647": { plans: 5.00, equipment: 0, services: 0, total: 5.00 },
+        "(754) 262-7874": { plans: 6.25, equipment: 30.00, services: 0, total: 36.25 }
+      };
+
       const allPhoneNumbers = Object.keys(phoneNumberToDataUsage);
       
-      const allLines: LineData[] = allPhoneNumbers.map((phoneNumber) => {
+      const allLines = allPhoneNumbers.map((phoneNumber) => {
         const phoneEquipment = equipmentByPhoneNumber[phoneNumber]?.find(eq => 
           eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet'
         );
 
-        const lineType = phoneNumber.includes("262-7874") ? "Mobile Internet" : 
+        const lineType = phoneNumber.includes("262-7874") || phoneNumber.includes("249-8647") ? "Mobile Internet" : 
                         (phoneNumber.includes("393-2341") || phoneNumber.includes("393-2478")) ? "Wearable" : 
                         "Voice";
+
+        const lineCosts = phoneNumberToLineCosts[phoneNumber] || { plans: 0, equipment: 0, services: 0, total: 0 };
 
         return {
           phoneNumber: phoneNumber,
@@ -256,23 +237,22 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           lineType: lineType,
           planName: lineType === "Voice" ? "Magenta MAX" : 
                     lineType === "Wearable" ? "Wearable Plan" : "Mobile Internet Plan",
-          monthlyCharge: lineType === "Voice" ? 85.00 : 
-                        lineType === "Wearable" ? 10.00 : 20.00,
+          monthlyCharge: lineCosts.plans,
           dataUsage: phoneNumberToDataUsage[phoneNumber] || 0,
           equipment: equipmentByPhoneNumber[phoneNumber] || [],
           earlyTerminationFee: 0
         };
       });
 
-      const mockAnalyzedData: BillData = {
+      const mockAnalyzedData = {
         carrier: "T-Mobile",
         accountNumber: "123456789",
-        billDate: "2023-08-15",
-        totalAmount: 542.52,
-        dueDate: "2023-09-01",
-        planCosts: 340.00,
-        equipmentCosts: 185.17,
-        servicesCosts: 17.35,
+        billDate: "2023-07-15",
+        totalAmount: 242.52,
+        dueDate: "2023-08-01",
+        planCosts: 93.12,
+        equipmentCosts: 130.14,
+        servicesCosts: 19.26,
         lines: allLines
       };
 

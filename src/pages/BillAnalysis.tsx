@@ -5,51 +5,12 @@ import BillUploader from '@/components/BillUploader';
 import LocationChecker from '@/components/LocationChecker';
 import LineDetailsForm from '@/components/LineDetailsForm';
 import CarrierComparison from '@/components/CarrierComparison';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import LineDetailsTable from '@/components/LineDetailsTable';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info, DollarSign, Smartphone, Phone, Receipt, Database, Laptop, Watch } from 'lucide-react';
+import { ArrowLeft, Info, DollarSign, Smartphone, Phone, Receipt, Database } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCurrentCarrier, getRecommendedCarriers } from '@/lib/carrierData';
-
-interface Equipment {
-  id: string;
-  deviceName: string;
-  monthlyPayment: number;
-  remainingPayments: number;
-  totalBalance: number;
-  associatedPhoneNumber: string;
-  type: 'Phone' | 'Watch' | 'Tablet' | 'Accessory';
-}
-
-interface LineData {
-  phoneNumber: string;
-  deviceName: string;
-  lineType: string;
-  planName: string;
-  monthlyCharge: number;
-  dataUsage: number;
-  equipment?: Equipment[];
-  earlyTerminationFee: number;
-}
-
-interface BillData {
-  carrier: string;
-  accountNumber: string;
-  billDate: string;
-  totalAmount: number;
-  dueDate: string;
-  planCosts: number;
-  equipmentCosts: number;
-  servicesCosts: number;
-  lines: LineData[];
-}
+import { BillData } from '@/interfaces/BillTypes';
 
 const BillAnalysis = () => {
   const [uploadComplete, setUploadComplete] = useState(false);
@@ -71,7 +32,7 @@ const BillAnalysis = () => {
       setAiAnalyzedData(analyzedData);
       
       const lineFormData = {
-        lines: analyzedData.lines.map((line: LineData) => {
+        lines: analyzedData.lines.map((line) => {
           const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet');
           
           return {
@@ -87,7 +48,7 @@ const BillAnalysis = () => {
       
       setLineDetails(lineFormData);
       
-      const totalDevicePayments = analyzedData.lines.reduce((sum: number, line: LineData) => {
+      const totalDevicePayments = analyzedData.lines.reduce((sum, line) => {
         if (!line.equipment || line.equipment.length === 0) return sum;
         
         return sum + line.equipment.reduce((lineSum, eq) => {
@@ -157,14 +118,9 @@ const BillAnalysis = () => {
   const getTotalDataUsage = () => {
     if (!aiAnalyzedData) return 0;
     
-    return aiAnalyzedData.lines.reduce((total: number, line: LineData) => {
+    return aiAnalyzedData.lines.reduce((total: number, line) => {
       return total + (line.dataUsage || 0);
     }, 0).toFixed(1);
-  };
-
-  const getEquipmentByType = (equipment: Equipment[] | undefined, types: string[]) => {
-    if (!equipment || equipment.length === 0) return [];
-    return equipment.filter(item => types.includes(item.type));
   };
 
   return (
@@ -279,74 +235,7 @@ const BillAnalysis = () => {
                           <Database size={16} className="mr-2 text-primary" />
                           Line Details
                         </h3>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Phone Number</TableHead>
-                                <TableHead>Line Type</TableHead>
-                                <TableHead>Plan</TableHead>
-                                <TableHead>Data Usage</TableHead>
-                                <TableHead>Handset</TableHead>
-                                <TableHead>Accessories</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {aiAnalyzedData.lines.map((line, index) => {
-                                const handsets = getEquipmentByType(line.equipment, ['Phone', 'Watch', 'Tablet']);
-                                const accessories = getEquipmentByType(line.equipment, ['Accessory']);
-                                
-                                return (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-medium">{line.phoneNumber}</TableCell>
-                                    <TableCell>{line.lineType}</TableCell>
-                                    <TableCell>{line.planName}</TableCell>
-                                    <TableCell>{line.dataUsage.toFixed(2)} GB</TableCell>
-                                    <TableCell>
-                                      {handsets.length > 0 ? (
-                                        <div className="space-y-1">
-                                          {handsets.map((eq, i) => (
-                                            <div key={i} className="flex items-center text-sm">
-                                              {eq.type === 'Phone' ? (
-                                                <Smartphone size={12} className="mr-1 text-primary" />
-                                              ) : eq.type === 'Watch' ? (
-                                                <Watch size={12} className="mr-1 text-purple-500" />
-                                              ) : (
-                                                <Laptop size={12} className="mr-1 text-green-500" />
-                                              )}
-                                              <span className="mr-2">{eq.deviceName}</span>
-                                              <span className="font-medium ml-auto text-green-700">${eq.totalBalance.toFixed(2)}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <span className="text-gray-400">None</span>
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
-                                      {accessories.length > 0 ? (
-                                        <div className="space-y-1">
-                                          {accessories.map((acc, i) => (
-                                            <div key={i} className="flex items-center text-sm">
-                                              <span className="mr-2 truncate" title={acc.deviceName}>
-                                                {acc.deviceName.length > 25 
-                                                  ? acc.deviceName.substring(0, 25) + '...' 
-                                                  : acc.deviceName}
-                                              </span>
-                                              <span className="font-medium ml-auto text-green-700">${acc.totalBalance.toFixed(2)}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <span className="text-gray-400">None</span>
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
+                        <LineDetailsTable lines={aiAnalyzedData.lines} />
                       </div>
                     )}
                     
@@ -396,4 +285,3 @@ const BillAnalysis = () => {
 };
 
 export default BillAnalysis;
-
