@@ -3,23 +3,35 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
 import BillUploader from '@/components/BillUploader';
+import LocationChecker from '@/components/LocationChecker';
 import CarrierComparison from '@/components/CarrierComparison';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCurrentCarrier } from '@/lib/carrierData';
+import { getCurrentCarrier, getRecommendedCarriers } from '@/lib/carrierData';
 
 const BillAnalysis = () => {
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [locationCheckComplete, setLocationCheckComplete] = useState(false);
   const [analyzingBill, setAnalyzingBill] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [coverageData, setCoverageData] = useState<any>(null);
+  const [homeZip, setHomeZip] = useState('');
+  const [workZip, setWorkZip] = useState('');
   
   const handleUploadComplete = (fileName: string) => {
     setFileName(fileName);
     setUploadComplete(true);
+  };
+  
+  const handleLocationCheckComplete = (homeZip: string, workZip: string, coverageMap: any) => {
+    setHomeZip(homeZip);
+    setWorkZip(workZip);
+    setCoverageData(coverageMap);
+    setLocationCheckComplete(true);
     
-    // Simulate bill analysis
+    // Simulate bill analysis now that we have location data
     setAnalyzingBill(true);
     setTimeout(() => {
       setAnalyzingBill(false);
@@ -39,12 +51,15 @@ const BillAnalysis = () => {
             </Link>
             <h1 className="text-3xl md:text-4xl font-semibold mb-2">Bill Analysis</h1>
             <p className="text-lg text-gray-600 max-w-2xl">
-              Upload your current phone bill and we'll analyze it to find better alternatives that could save you money.
+              Upload your current phone bill and enter your frequently visited locations. 
+              We'll analyze both to find better alternatives with good coverage.
             </p>
           </div>
           
           {!uploadComplete ? (
             <BillUploader onUploadComplete={handleUploadComplete} />
+          ) : !locationCheckComplete ? (
+            <LocationChecker onComplete={handleLocationCheckComplete} />
           ) : (
             <div className="space-y-12">
               {analyzingBill ? (
@@ -54,7 +69,7 @@ const BillAnalysis = () => {
                   </div>
                   <h2 className="text-xl font-semibold">Analyzing Your Bill</h2>
                   <p className="text-gray-600">
-                    We're processing {fileName} to extract your usage patterns, current plan details, and monthly costs.
+                    We're processing {fileName} and checking coverage at your locations to find the best matches.
                   </p>
                   <div className="flex justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -81,9 +96,48 @@ const BillAnalysis = () => {
                         <div className="text-sm text-gray-600">monthly average</div>
                       </div>
                     </div>
+                    
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <h3 className="font-medium mb-2">Coverage Check Results</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-sm font-medium">Home Location (ZIP: {homeZip})</div>
+                          <div className="text-xs text-gray-500 mb-1">Coverage scores by carrier:</div>
+                          <div className="space-y-1">
+                            {coverageData && Object.entries(coverageData).map(([carrier, data]: [string, any]) => (
+                              <div key={carrier} className="flex justify-between text-sm">
+                                <span className="capitalize">{carrier}:</span>
+                                <span className={`font-medium ${data.homeZip >= 90 ? 'text-green-600' : data.homeZip >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                  {data.homeZip}%
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">Work Location (ZIP: {workZip})</div>
+                          <div className="text-xs text-gray-500 mb-1">Coverage scores by carrier:</div>
+                          <div className="space-y-1">
+                            {coverageData && Object.entries(coverageData).map(([carrier, data]: [string, any]) => (
+                              <div key={carrier} className="flex justify-between text-sm">
+                                <span className="capitalize">{carrier}:</span>
+                                <span className={`font-medium ${data.workZip >= 90 ? 'text-green-600' : data.workZip >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                  {data.workZip}%
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
-                  <CarrierComparison currentCarrier={getCurrentCarrier()} />
+                  <CarrierComparison 
+                    currentCarrier={getCurrentCarrier()} 
+                    coverageData={coverageData}
+                    homeZip={homeZip}
+                    workZip={workZip}
+                  />
                 </div>
               )}
             </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Check, Info, ArrowRight, ExternalLink } from 'lucide-react';
+import { Check, Info, ArrowRight, ExternalLink, MapPin, Briefcase } from 'lucide-react';
 import { 
   HoverCard,
   HoverCardContent,
@@ -21,6 +21,11 @@ interface Carrier {
     monthly: number;
     yearly: number;
   };
+  locationCoverage?: {
+    home: number;
+    work: number;
+    average: number;
+  };
 }
 
 interface CarrierComparisonProps {
@@ -28,17 +33,25 @@ interface CarrierComparisonProps {
     name: string;
     monthlyPrice: number;
   };
+  coverageData?: any;
+  homeZip?: string;
+  workZip?: string;
 }
 
-const CarrierComparison: React.FC<CarrierComparisonProps> = ({ currentCarrier }) => {
+const CarrierComparison: React.FC<CarrierComparisonProps> = ({ 
+  currentCarrier, 
+  coverageData = null,
+  homeZip = '',
+  workZip = ''
+}) => {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'price' | 'coverage'>('price');
+  const [sortBy, setSortBy] = useState<'price' | 'coverage' | 'locationCoverage'>('price');
 
   useEffect(() => {
     // Simulate API call to get carrier data
     setTimeout(() => {
-      const alternativeCarriers: Carrier[] = [
+      let alternativeCarriers: Carrier[] = [
         {
           id: 'tmobile',
           name: 'T-Mobile',
@@ -106,23 +119,47 @@ const CarrierComparison: React.FC<CarrierComparisonProps> = ({ currentCarrier })
         }
       ];
       
+      // Add location coverage data if available
+      if (coverageData) {
+        alternativeCarriers = alternativeCarriers.map(carrier => {
+          if (coverageData[carrier.id.toLowerCase()]) {
+            const homeScore = coverageData[carrier.id.toLowerCase()].homeZip;
+            const workScore = coverageData[carrier.id.toLowerCase()].workZip;
+            return {
+              ...carrier,
+              locationCoverage: {
+                home: homeScore,
+                work: workScore,
+                average: Math.round((homeScore + workScore) / 2)
+              }
+            };
+          }
+          return carrier;
+        });
+      }
+      
       setCarriers(alternativeCarriers);
       setIsLoading(false);
     }, 1500);
-  }, [currentCarrier]);
+  }, [currentCarrier, coverageData]);
 
-  const sortedCarriers = [...carriers].sort((a, b) => 
-    sortBy === 'price' 
-      ? a.monthlyPrice - b.monthlyPrice 
-      : b.coverage - a.coverage
-  );
+  const sortedCarriers = [...carriers].sort((a, b) => {
+    if (sortBy === 'price') {
+      return a.monthlyPrice - b.monthlyPrice;
+    } else if (sortBy === 'coverage') {
+      return b.coverage - a.coverage;
+    } else if (sortBy === 'locationCoverage' && a.locationCoverage && b.locationCoverage) {
+      return b.locationCoverage.average - a.locationCoverage.average;
+    } 
+    return 0;
+  });
 
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Recommended Alternatives</h2>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <Button 
               variant={sortBy === 'price' ? 'default' : 'outline'} 
               size="sm"
@@ -137,6 +174,15 @@ const CarrierComparison: React.FC<CarrierComparisonProps> = ({ currentCarrier })
             >
               Sort by Coverage
             </Button>
+            {coverageData && (
+              <Button 
+                variant={sortBy === 'locationCoverage' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => setSortBy('locationCoverage')}
+              >
+                Sort by Your Locations
+              </Button>
+            )}
           </div>
         </div>
         
@@ -206,6 +252,23 @@ const CarrierComparison: React.FC<CarrierComparisonProps> = ({ currentCarrier })
                       </div>
                     </div>
                     
+                    {carrier.locationCoverage && (
+                      <div className="mt-4 mb-4 md:mt-0 md:mb-0 md:ml-4 py-1 px-3 rounded-full bg-gray-100 flex items-center">
+                        <div className="text-xs md:text-sm">
+                          <span className="font-medium">Your Locations:</span> 
+                          <span className={`ml-1 ${
+                            carrier.locationCoverage.average >= 90 
+                            ? 'text-green-600' 
+                            : carrier.locationCoverage.average >= 75 
+                            ? 'text-yellow-600' 
+                            : 'text-red-600'
+                          }`}>
+                            {carrier.locationCoverage.average}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="mt-4 md:mt-0 md:ml-auto">
                       <HoverCard>
                         <HoverCardTrigger asChild>
@@ -214,16 +277,56 @@ const CarrierComparison: React.FC<CarrierComparisonProps> = ({ currentCarrier })
                           </Button>
                         </HoverCardTrigger>
                         <HoverCardContent className="w-80">
-                          <div className="space-y-2">
-                            <h4 className="font-medium">Plan Features</h4>
-                            <ul className="space-y-1">
-                              {carrier.features.map((feature, i) => (
-                                <li key={i} className="flex items-center text-sm">
-                                  <Check size={14} className="text-green-500 mr-2" />
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-medium mb-2">Plan Features</h4>
+                              <ul className="space-y-1">
+                                {carrier.features.map((feature, i) => (
+                                  <li key={i} className="flex items-center text-sm">
+                                    <Check size={14} className="text-green-500 mr-2" />
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            {carrier.locationCoverage && (
+                              <div>
+                                <h4 className="font-medium mb-2">Coverage at Your Locations</h4>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center">
+                                      <MapPin size={14} className="mr-1" />
+                                      <span>Home ({homeZip}):</span>
+                                    </div>
+                                    <span className={`font-medium ${
+                                      carrier.locationCoverage.home >= 90 
+                                      ? 'text-green-600' 
+                                      : carrier.locationCoverage.home >= 75 
+                                      ? 'text-yellow-600' 
+                                      : 'text-red-600'
+                                    }`}>
+                                      {carrier.locationCoverage.home}%
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center">
+                                      <Briefcase size={14} className="mr-1" />
+                                      <span>Work ({workZip}):</span>
+                                    </div>
+                                    <span className={`font-medium ${
+                                      carrier.locationCoverage.work >= 90 
+                                      ? 'text-green-600' 
+                                      : carrier.locationCoverage.work >= 75 
+                                      ? 'text-yellow-600' 
+                                      : 'text-red-600'
+                                    }`}>
+                                      {carrier.locationCoverage.work}%
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </HoverCardContent>
                       </HoverCard>
@@ -242,7 +345,7 @@ const CarrierComparison: React.FC<CarrierComparisonProps> = ({ currentCarrier })
       
       <div className="text-center mt-12">
         <p className="text-sm text-gray-500 mb-4">
-          Prices and plan details are estimates based on your current usage pattern.
+          Prices, plan details, and coverage information are estimates based on your inputs.
           Visit the carrier's website for the most up-to-date information.
         </p>
         <Button variant="outline">
