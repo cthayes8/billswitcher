@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
@@ -48,7 +48,11 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete }) => {
     },
   });
   
-  const { fields, append, remove } = form.control._formValues.lines;
+  // Use useFieldArray hook for managing the array of lines
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "lines",
+  });
   
   const addLine = () => {
     append({
