@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Smartphone, DollarSign, Sparkles, Phone } from 'lucide-react';
+import { Plus, Minus, Smartphone, DollarSign, Sparkles, Phone, Laptop, Watch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,6 +24,7 @@ const lineSchema = z.object({
     lineType: z.string().optional(),
     remainingPayments: z.number().min(0, "Must be 0 or greater"),
     monthlyPayment: z.number().min(0, "Must be 0 or greater"),
+    totalBalance: z.number().min(0, "Must be 0 or greater"),
     earlyTerminationFee: z.number().min(0, "Must be 0 or greater"),
   })),
 });
@@ -37,7 +38,7 @@ interface Equipment {
   remainingPayments: number;
   totalBalance: number;
   associatedPhoneNumber: string;
-  type: 'Phone' | 'Accessory';
+  type: 'Phone' | 'Watch' | 'Tablet' | 'Accessory';
 }
 
 interface LineData {
@@ -63,7 +64,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
   const defaultValues = {
     lines: initialData ? initialData.map(line => {
       // Get the phone equipment if any
-      const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone');
+      const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet');
       
       return {
         deviceName: line.deviceName || '',
@@ -71,6 +72,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
         lineType: line.lineType || '',
         remainingPayments: phoneEquipment?.remainingPayments || 0,
         monthlyPayment: phoneEquipment?.monthlyPayment || 0,
+        totalBalance: phoneEquipment?.totalBalance || 0,
         earlyTerminationFee: line.earlyTerminationFee || 0,
       };
     }) : [
@@ -80,6 +82,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
         lineType: '',
         remainingPayments: 0,
         monthlyPayment: 0,
+        totalBalance: 0,
         earlyTerminationFee: 0,
       }
     ]
@@ -103,6 +106,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
       lineType: '',
       remainingPayments: 0,
       monthlyPayment: 0,
+      totalBalance: 0,
       earlyTerminationFee: 0,
     });
   };
@@ -138,6 +142,17 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getDeviceIcon = (device: string = '') => {
+    const deviceLower = device.toLowerCase();
+    if (deviceLower.includes('watch')) {
+      return <Watch size={16} className="mr-1 text-purple-600" />;
+    } else if (deviceLower.includes('ipad') || deviceLower.includes('tablet')) {
+      return <Laptop size={16} className="mr-1 text-green-600" />;
+    } else {
+      return <Smartphone size={16} className="mr-1 text-primary" />;
     }
   };
 
@@ -264,6 +279,31 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
                         <div className="flex items-center space-x-2">
                           <DollarSign size={16} />
                           <span>Monthly Payment</span>
+                        </div>
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="0.00" 
+                          {...field}
+                          onChange={e => field.onChange(Number(e.target.value))}
+                          step="0.01"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name={`lines.${index}.totalBalance`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <div className="flex items-center space-x-2">
+                          <DollarSign size={16} />
+                          <span>Total Balance</span>
                         </div>
                       </FormLabel>
                       <FormControl>

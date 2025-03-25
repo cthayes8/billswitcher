@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, File, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
@@ -13,7 +12,7 @@ interface Equipment {
   remainingPayments: number;
   totalBalance: number;
   associatedPhoneNumber: string;
-  type: 'Phone' | 'Accessory';
+  type: 'Phone' | 'Watch' | 'Tablet' | 'Accessory';
 }
 
 interface LineData {
@@ -130,61 +129,97 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     
     // Simulate AI analysis of the document
     setTimeout(() => {
-      // Mock data extraction - in a real implementation, this would be done by AI
+      // Mock data extraction based on the sample bill provided
       const mockEquipmentData: Equipment[] = [
         {
-          id: "PHN-001",
-          deviceName: "iPhone 14 Pro",
-          monthlyPayment: 33.34,
-          remainingPayments: 18,
-          totalBalance: 600.12,
+          id: "20241205110531258",
+          deviceName: "iPhone 16 Pro - White Titanium - 256GB",
+          monthlyPayment: 45.84,
+          remainingPayments: 20,
+          totalBalance: 962.47,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Phone"
         },
         {
-          id: "ACC-001",
-          deviceName: "Apple Watch Series 8",
-          monthlyPayment: 20.84,
-          remainingPayments: 12,
-          totalBalance: 250.08,
-          associatedPhoneNumber: "(908) 764-1876",
-          type: "Accessory"
-        },
-        {
-          id: "PHN-002",
-          deviceName: "Samsung Galaxy S23",
-          monthlyPayment: 29.17,
-          remainingPayments: 24,
-          totalBalance: 700.08,
-          associatedPhoneNumber: "(720) 935-9642",
-          type: "Phone"
-        },
-        {
-          id: "ACC-002",
-          deviceName: "Samsung Galaxy Watch 5",
-          monthlyPayment: 12.50,
-          remainingPayments: 12,
-          totalBalance: 150.00,
-          associatedPhoneNumber: "(720) 935-9642",
-          type: "Accessory"
-        },
-        {
-          id: "PHN-003",
-          deviceName: "Google Pixel 7",
-          monthlyPayment: 25.00,
-          remainingPayments: 12,
-          totalBalance: 300.00,
+          id: "20241205110531193",
+          deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
+          monthlyPayment: 50.00,
+          remainingPayments: 20,
+          totalBalance: 1049.99,
           associatedPhoneNumber: "(720) 394-1781",
           type: "Phone"
         },
         {
-          id: "PHN-009",
-          deviceName: "Mobile Hotspot",
-          monthlyPayment: 10.00,
-          remainingPayments: 18,
-          totalBalance: 180.00,
+          id: "20230715110544754",
+          deviceName: "Watch Ultra 49mm",
+          monthlyPayment: 33.34,
+          remainingPayments: 4,
+          totalBalance: 166.53,
+          associatedPhoneNumber: "(954) 393-2341",
+          type: "Watch"
+        },
+        {
+          id: "20230715110544754",
+          deviceName: "Watch Series 8 41mm",
+          monthlyPayment: 20.84,
+          remainingPayments: 4,
+          totalBalance: 104.03,
+          associatedPhoneNumber: "(954) 393-2478",
+          type: "Watch"
+        },
+        {
+          id: "20240710110862253",
+          deviceName: "iPad Pro 13-inch (M4)",
+          monthlyPayment: 30.00,
+          remainingPayments: 11,
+          totalBalance: 349.42,
           associatedPhoneNumber: "(754) 262-7874",
-          type: "Phone"
+          type: "Tablet"
+        },
+        {
+          id: "20241205110531258",
+          deviceName: "Apple AirPods 4 with Active Noise Cancellation",
+          monthlyPayment: 15.00,
+          remainingPayments: 8,
+          totalBalance: 134.99,
+          associatedPhoneNumber: "(908) 764-1876",
+          type: "Accessory"
+        },
+        {
+          id: "20241205110531258",
+          deviceName: "GoTo™ Tempered Glass Screen Protector for Apple iPhone 16 Pro",
+          monthlyPayment: 3.34,
+          remainingPayments: 8,
+          totalBalance: 29.97,
+          associatedPhoneNumber: "(908) 764-1876",
+          type: "Accessory"
+        },
+        {
+          id: "20250104110953267",
+          deviceName: "Apple Silicone Case with MagSafe for Apple iPhone 16 Pro Max",
+          monthlyPayment: 4.17,
+          remainingPayments: 9,
+          totalBalance: 41.65,
+          associatedPhoneNumber: "(908) 764-1876",
+          type: "Accessory"
+        },
+        {
+          id: "20250104110953267",
+          deviceName: "Apple Clear Case with MagSafe for Apple iPhone 16 Pro",
+          monthlyPayment: 4.17,
+          remainingPayments: 9,
+          totalBalance: 41.65,
+          associatedPhoneNumber: "(908) 764-1876",
+          type: "Accessory"
+        },
+        {
+          id: "20250104110953267",
+          deviceName: "Apple Watch Magnetic Fast Charger to USB-C Cable, 1m",
+          monthlyPayment: 2.50,
+          remainingPayments: 9,
+          totalBalance: 24.99,
+          associatedPhoneNumber: "(908) 764-1876",
+          type: "Accessory"
         }
       ];
 
@@ -209,7 +244,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         lines: [
           {
             phoneNumber: "(908) 764-1876",
-            deviceName: "iPhone 14 Pro",
+            deviceName: "iPhone 16 Pro - White Titanium - 256GB",
             lineType: "Voice",
             planName: "Unlimited Plus",
             monthlyCharge: 55.00,
@@ -218,78 +253,38 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             earlyTerminationFee: 150,
           },
           {
-            phoneNumber: "(720) 935-9642",
-            deviceName: "Samsung Galaxy S23",
+            phoneNumber: "(720) 394-1781",
+            deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
             lineType: "Voice",
             planName: "Unlimited Basic",
             monthlyCharge: 45.00,
             dataUsage: 6.2,
-            equipment: equipmentByPhoneNumber["(720) 935-9642"] || [],
-            earlyTerminationFee: 0,
-          },
-          {
-            phoneNumber: "(720) 394-1781",
-            deviceName: "Google Pixel 7",
-            lineType: "Voice",
-            planName: "Basic Voice Plan",
-            monthlyCharge: 40.00,
-            dataUsage: 4.5,
             equipment: equipmentByPhoneNumber["(720) 394-1781"] || [],
-            earlyTerminationFee: 75,
-          },
-          {
-            phoneNumber: "(720) 935-9692",
-            deviceName: "iPhone 13",
-            lineType: "Voice",
-            planName: "Basic Voice Plan",
-            monthlyCharge: 40.00,
-            dataUsage: 3.2,
-            equipment: [],
-            earlyTerminationFee: 0,
-          },
-          {
-            phoneNumber: "(720) 998-3263",
-            deviceName: "iPhone SE",
-            lineType: "Voice",
-            planName: "Basic Voice Plan",
-            monthlyCharge: 40.00,
-            dataUsage: 2.1,
-            equipment: [],
             earlyTerminationFee: 0,
           },
           {
             phoneNumber: "(954) 393-2341",
-            deviceName: "Apple Watch Series 8",
+            deviceName: "Watch Ultra 49mm",
             lineType: "Wearable",
             planName: "Wearable Plan",
             monthlyCharge: 10.00,
             dataUsage: 0.3,
-            equipment: [],
+            equipment: equipmentByPhoneNumber["(954) 393-2341"] || [],
             earlyTerminationFee: 75,
           },
           {
             phoneNumber: "(954) 393-2478",
-            deviceName: "Samsung Galaxy Watch 5",
+            deviceName: "Watch Series 8 41mm",
             lineType: "Wearable",
             planName: "Wearable Plan",
             monthlyCharge: 10.00,
             dataUsage: 0.2,
-            equipment: [],
+            equipment: equipmentByPhoneNumber["(954) 393-2478"] || [],
             earlyTerminationFee: 50,
           },
           {
-            phoneNumber: "(754) 249-8647",
-            deviceName: "Tablet",
-            lineType: "Mobile Internet",
-            planName: "Mobile Internet Plan",
-            monthlyCharge: 20.00,
-            dataUsage: 1.8,
-            equipment: [],
-            earlyTerminationFee: 0,
-          },
-          {
             phoneNumber: "(754) 262-7874",
-            deviceName: "Mobile Hotspot",
+            deviceName: "iPad Pro 13-inch (M4)",
             lineType: "Mobile Internet",
             planName: "Mobile Internet Plan",
             monthlyCharge: 20.00,
