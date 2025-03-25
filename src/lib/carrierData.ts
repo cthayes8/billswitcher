@@ -197,115 +197,6 @@ export const carriers: Carrier[] = [
       voice: 89,
       map: '/coverage-maps/tmobile.png'
     }
-  },
-  {
-    id: 'visible',
-    name: 'Visible',
-    logo: 'Vi',
-    description: 'Visible is a digital-first carrier owned by Verizon offering simple, affordable unlimited plans.',
-    pros: [
-      'Affordable unlimited plan',
-      'Uses Verizon\'s network',
-      'Simple pricing structure',
-      'Unlimited mobile hotspot (limited to 5 Mbps)'
-    ],
-    cons: [
-      'Deprioritized during congestion',
-      'Limited customer service options',
-      'No physical stores',
-      'Limited international options'
-    ],
-    plans: [
-      {
-        name: 'Visible',
-        price: 40,
-        data: 'Unlimited',
-        features: [
-          '5G nationwide access',
-          'Unlimited talk and text',
-          'Unlimited mobile hotspot (limited to 5 Mbps)',
-          'Taxes and fees included'
-        ]
-      },
-      {
-        name: 'Visible+',
-        price: 45,
-        data: 'Unlimited',
-        features: [
-          '5G Ultra Wideband access',
-          '50GB premium data',
-          'Unlimited mobile hotspot (limited to 5 Mbps)',
-          'International calling to 30+ countries',
-          'Taxes and fees included'
-        ]
-      }
-    ],
-    coverage: {
-      overall: 92,
-      data: 90,
-      voice: 94,
-      map: '/coverage-maps/visible.png'
-    }
-  },
-  {
-    id: 'mint',
-    name: 'Mint Mobile',
-    logo: 'M',
-    description: 'Mint Mobile offers prepaid plans with bulk pricing for 3, 6, or 12 months of service upfront.',
-    pros: [
-      'Very affordable plans',
-      'Uses T-Mobile\'s network',
-      'Multi-month discounts',
-      'Simple plan structure'
-    ],
-    cons: [
-      'Requires upfront payment for several months',
-      'Deprioritized during congestion',
-      'Limited customer service options',
-      'No physical stores'
-    ],
-    plans: [
-      {
-        name: '4GB Plan',
-        price: 15,
-        data: '4GB',
-        features: [
-          '5G • 4G LTE access',
-          'Unlimited talk and text',
-          'Free calls to Mexico and Canada',
-          'Mobile hotspot included'
-        ]
-      },
-      {
-        name: '10GB Plan',
-        price: 20,
-        data: '10GB',
-        features: [
-          '5G • 4G LTE access',
-          'Unlimited talk and text',
-          'Free calls to Mexico and Canada',
-          'Mobile hotspot included'
-        ]
-      },
-      {
-        name: 'Unlimited Plan',
-        price: 30,
-        data: 'Unlimited',
-        features: [
-          '5G • 4G LTE access',
-          '35GB premium data',
-          'Unlimited talk and text',
-          'Free calls to Mexico and Canada',
-          '5GB mobile hotspot data'
-        ]
-      }
-    ],
-    coverage: {
-      overall: 88,
-      data: 87,
-      voice: 90,
-      map: '/coverage-maps/mint.png'
-    }
   }
 ];
 
@@ -325,11 +216,5 @@ export const getRecommendedCarriers = (usage: {
 }) => {
   // Filter carriers based on usage needs
   // This is a simplified example
-  return carriers.filter(carrier => {
-    if (usage.data > 10 && carrier.id === 'mint') {
-      // Only include Mint if the user doesn't need a lot of data
-      return false;
-    }
-    return true;
-  });
+  return carriers;
 };
