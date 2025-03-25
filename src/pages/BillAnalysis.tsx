@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -22,9 +23,41 @@ const BillAnalysis = () => {
   const [workZip, setWorkZip] = useState('');
   const [lineDetails, setLineDetails] = useState<any>(null);
   const [switchingCosts, setSwitchingCosts] = useState<any>(null);
+  const [aiAnalyzedData, setAiAnalyzedData] = useState<any>(null);
   
-  const handleUploadComplete = (fileName: string) => {
+  const handleUploadComplete = (fileName: string, analyzedData?: any) => {
     setFileName(fileName);
+    if (analyzedData) {
+      setAiAnalyzedData(analyzedData);
+      
+      // Auto-populate line details from AI analysis
+      const lineFormData = {
+        lines: analyzedData.lines.map((line: any) => ({
+          deviceName: line.deviceName,
+          remainingPayments: line.remainingPayments,
+          monthlyPayment: line.monthlyPayment,
+          earlyTerminationFee: line.earlyTerminationFee,
+        }))
+      };
+      
+      setLineDetails(lineFormData);
+      
+      // Calculate switching costs automatically
+      const totalDevicePayments = lineFormData.lines.reduce((sum: number, line: any) => {
+        return sum + (line.monthlyPayment * line.remainingPayments);
+      }, 0);
+      
+      const totalTerminationFees = lineFormData.lines.reduce((sum: number, line: any) => {
+        return sum + line.earlyTerminationFee;
+      }, 0);
+      
+      setSwitchingCosts({
+        devicePayments: totalDevicePayments,
+        terminationFees: totalTerminationFees,
+        total: totalDevicePayments + totalTerminationFees,
+        lineCount: lineFormData.lines.length
+      });
+    }
     setUploadComplete(true);
   };
   
@@ -33,6 +66,16 @@ const BillAnalysis = () => {
     setWorkZip(workZip);
     setCoverageData(coverageMap);
     setLocationCheckComplete(true);
+    
+    // Skip the manual line details form if we have AI-analyzed data
+    if (aiAnalyzedData) {
+      setLineDetailsComplete(true);
+      setAnalyzingBill(true);
+      setTimeout(() => {
+        setAnalyzingBill(false);
+        setAnalysisComplete(true);
+      }, 3000);
+    }
   };
   
   const handleLineDetailsComplete = (data: any) => {
@@ -73,8 +116,8 @@ const BillAnalysis = () => {
             </Link>
             <h1 className="text-3xl md:text-4xl font-semibold mb-2">Bill Analysis</h1>
             <p className="text-lg text-gray-600 max-w-2xl">
-              Upload your current phone bill, enter your frequently visited locations, and provide line details. 
-              We'll analyze everything to find better alternatives with good coverage.
+              Upload your current phone bill and we'll automatically analyze it to find better alternatives with good coverage.
+              Our AI will extract line details so you don't have to enter them manually.
             </p>
           </div>
           
@@ -83,7 +126,7 @@ const BillAnalysis = () => {
           ) : !locationCheckComplete ? (
             <LocationChecker onComplete={handleLocationCheckComplete} />
           ) : !lineDetailsComplete ? (
-            <LineDetailsForm onComplete={handleLineDetailsComplete} />
+            <LineDetailsForm onComplete={handleLineDetailsComplete} initialData={aiAnalyzedData?.lines} />
           ) : (
             <div className="space-y-12">
               {analyzingBill ? (

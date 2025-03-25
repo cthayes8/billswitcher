@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, File, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, File, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 
 interface BillUploaderProps {
-  onUploadComplete: (fileName: string) => void;
+  onUploadComplete: (fileName: string, analyzedData?: any) => void;
 }
 
 const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
@@ -15,7 +15,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error'>('idle');
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -83,13 +83,56 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
       setUploadProgress(prev => {
         if (prev >= 100) {
           clearInterval(interval);
-          setUploadStatus('success');
-          onUploadComplete(file.name);
+          // Start AI analysis after upload completes
+          analyzeDocument(file);
           return 100;
         }
         return prev + 5;
       });
     }, 200);
+  };
+
+  const analyzeDocument = (file: File) => {
+    setUploadStatus('analyzing');
+    
+    // Simulate AI analysis of the document
+    setTimeout(() => {
+      // Mock data extraction - in a real implementation, this would be done by AI
+      const mockAnalyzedData = {
+        carrier: "Big Mobile Inc.",
+        accountNumber: "123456789",
+        billDate: "2023-08-15",
+        totalAmount: 245.67,
+        dueDate: "2023-09-01",
+        lines: [
+          {
+            deviceName: "iPhone 14 Pro",
+            remainingPayments: 18,
+            monthlyPayment: 33.34,
+            earlyTerminationFee: 150,
+            phoneNumber: "555-123-4567",
+            planName: "Unlimited Plus"
+          },
+          {
+            deviceName: "Samsung Galaxy S23",
+            remainingPayments: 24,
+            monthlyPayment: 29.99,
+            earlyTerminationFee: 175,
+            phoneNumber: "555-987-6543",
+            planName: "Unlimited Basic"
+          }
+        ]
+      };
+
+      // Success! Send the data back
+      setUploadStatus('success');
+      onUploadComplete(file.name, mockAnalyzedData);
+
+      toast({
+        title: "Bill analysis complete",
+        description: `Found ${mockAnalyzedData.lines.length} lines on your account`,
+      });
+    }, 3000); // Simulate 3 seconds of AI processing
   };
 
   const resetUpload = () => {
@@ -171,14 +214,16 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             <Progress value={uploadProgress} className="h-2" />
             <div className="flex justify-between mt-1 text-xs text-gray-500">
               <span>
-                {uploadStatus === 'success' 
-                  ? 'Upload complete!' 
+                {uploadStatus === 'analyzing' 
+                  ? 'Analyzing bill with AI...' 
+                  : uploadStatus === 'success' 
+                  ? 'Analysis complete!' 
                   : uploadStatus === 'error'
                   ? 'Upload failed'
                   : `Uploading... ${uploadProgress}%`
                 }
               </span>
-              <span>{uploadProgress}%</span>
+              <span>{uploadStatus === 'analyzing' ? <Sparkles size={14} className="inline text-amber-500 animate-pulse" /> : `${uploadProgress}%`}</span>
             </div>
           </div>
           
@@ -188,6 +233,11 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
                 Upload another bill
               </Button>
               <Button size="sm">Continue</Button>
+            </div>
+          ) : uploadStatus === 'analyzing' ? (
+            <div className="flex items-center justify-center p-2 bg-amber-50 rounded-md text-amber-700 text-sm">
+              <Sparkles size={14} className="mr-2 animate-pulse" />
+              AI is analyzing your bill to extract line information...
             </div>
           ) : (
             <Button variant="outline" size="sm" onClick={resetUpload}>
@@ -202,7 +252,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           What happens to my bill?
         </h4>
         <p className="text-sm text-gray-500">
-          We only extract information about your usage and charges to recommend better plans.
+          We use AI to automatically extract information about your usage and charges to recommend better plans.
           Your personal details remain secure and your bill is deleted after analysis.
         </p>
       </div>

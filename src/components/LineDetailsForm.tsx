@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Smartphone, DollarSign } from 'lucide-react';
+import { Plus, Minus, Smartphone, DollarSign, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const lineSchema = z.object({
@@ -29,23 +29,32 @@ type LineFormValues = z.infer<typeof lineSchema>;
 
 interface LineDetailsFormProps {
   onComplete: (lineDetails: LineFormValues) => void;
+  initialData?: any[];
 }
 
-const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete }) => {
+const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialData }) => {
   const { toast } = useToast();
+  
+  // Prepare initial values
+  const defaultValues = {
+    lines: initialData ? initialData.map(line => ({
+      deviceName: line.deviceName || '',
+      remainingPayments: line.remainingPayments || 0,
+      monthlyPayment: line.monthlyPayment || 0,
+      earlyTerminationFee: line.earlyTerminationFee || 0,
+    })) : [
+      {
+        deviceName: '',
+        remainingPayments: 0,
+        monthlyPayment: 0,
+        earlyTerminationFee: 0,
+      }
+    ]
+  };
   
   const form = useForm<LineFormValues>({
     resolver: zodResolver(lineSchema),
-    defaultValues: {
-      lines: [
-        {
-          deviceName: '',
-          remainingPayments: 0,
-          monthlyPayment: 0,
-          earlyTerminationFee: 0,
-        }
-      ]
-    },
+    defaultValues,
   });
   
   // Use useFieldArray hook for managing the array of lines
@@ -86,11 +95,25 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete }) => {
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-      <h2 className="text-xl font-semibold mb-4">Enter Line Details</h2>
-      <p className="text-gray-600 mb-6">
-        Tell us about each line on your bill, including device payment plans and any early termination fees.
-        This helps us calculate the true cost of switching.
-      </p>
+      <h2 className="text-xl font-semibold mb-4">Confirm Line Details</h2>
+      
+      {initialData ? (
+        <div className="mb-6 p-4 bg-green-50 rounded-lg flex items-center">
+          <Sparkles size={20} className="text-green-600 mr-3 flex-shrink-0" />
+          <div>
+            <p className="text-green-800 font-medium">AI-detected line details</p>
+            <p className="text-sm text-green-700">
+              We've automatically extracted {initialData.length} lines from your bill. 
+              Please review and confirm the information below.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-600 mb-6">
+          Tell us about each line on your bill, including device payment plans and any early termination fees.
+          This helps us calculate the true cost of switching.
+        </p>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -213,7 +236,7 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete }) => {
           </Button>
           
           <Button type="submit" className="w-full">
-            Save Line Details
+            {initialData ? 'Confirm Line Details' : 'Save Line Details'}
           </Button>
         </form>
       </Form>
