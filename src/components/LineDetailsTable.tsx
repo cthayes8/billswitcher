@@ -16,12 +16,7 @@ interface LineDetailsTableProps {
 }
 
 const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
-  // Function to get equipment by type
-  const getEquipmentByType = (equipment: Equipment[] | undefined, types: string[]) => {
-    if (!equipment || equipment.length === 0) return [];
-    return equipment.filter(item => types.includes(item.type));
-  };
-
+  // Function to get device icon based on type
   const getDeviceIcon = (type: string) => {
     switch(type) {
       case 'Phone':
@@ -33,6 +28,12 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
       default:
         return <Smartphone size={14} className="mr-1 text-primary" />;
     }
+  };
+
+  // Calculate the total balance for all equipment items
+  const calculateTotalBalance = (equipment: Equipment[] | undefined) => {
+    if (!equipment || equipment.length === 0) return 0;
+    return equipment.reduce((total, item) => total + item.totalBalance, 0);
   };
 
   return (
@@ -51,6 +52,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
           {lines.map((line, index) => {
             // Combine all equipment for better visibility
             const allEquipment = line.equipment || [];
+            const totalBalance = calculateTotalBalance(allEquipment);
             
             return (
               <TableRow key={index}>
@@ -73,7 +75,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                             
                             <div className="text-gray-600">Remaining payments:</div>
                             <div className="font-medium">
-                              {eq.remainingPayments} of {eq.type === 'Phone' || eq.type === 'Watch' ? '24' : '12'}
+                              {eq.remainingPayments} of {eq.type === 'Phone' ? '24' : eq.type === 'Watch' ? '24' : '12'}
                             </div>
                             
                             <div className="text-gray-600">Balance:</div>
@@ -81,6 +83,15 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                           </div>
                         </div>
                       ))}
+                      
+                      {allEquipment.length > 1 && (
+                        <div className="border-t border-gray-200 pt-2 mt-2">
+                          <div className="grid grid-cols-2 gap-2 text-sm font-medium">
+                            <div className="text-gray-700">Total balance:</div>
+                            <div className="text-red-600">${totalBalance.toFixed(2)}</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <span className="text-gray-400">None</span>
