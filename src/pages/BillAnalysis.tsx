@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -15,7 +14,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info, DollarSign, Smartphone, Phone, Receipt, Database } from 'lucide-react';
+import { ArrowLeft, Info, DollarSign, Smartphone, Phone, Receipt, Database, Laptop } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCurrentCarrier, getRecommendedCarriers } from '@/lib/carrierData';
 
@@ -25,7 +24,7 @@ interface Equipment {
   monthlyPayment: number;
   remainingPayments: number;
   totalBalance: number;
-  associatedPhoneNumber?: string;
+  associatedPhoneNumber: string;
   type: 'Phone' | 'Accessory';
 }
 
@@ -36,7 +35,7 @@ interface LineData {
   planName: string;
   monthlyCharge: number;
   dataUsage: number;
-  equipment?: Equipment;
+  equipment?: Equipment[];
   earlyTerminationFee: number;
 }
 
@@ -50,7 +49,6 @@ interface BillData {
   equipmentCosts: number;
   servicesCosts: number;
   lines: LineData[];
-  accessories: Equipment[];
 }
 
 const BillAnalysis = () => {
@@ -72,28 +70,29 @@ const BillAnalysis = () => {
     if (analyzedData) {
       setAiAnalyzedData(analyzedData);
       
-      // Auto-populate line details from AI analysis
       const lineFormData = {
-        lines: analyzedData.lines.map((line: LineData) => ({
-          deviceName: line.deviceName,
-          phoneNumber: line.phoneNumber,
-          lineType: line.lineType,
-          remainingPayments: line.equipment?.remainingPayments || 0,
-          monthlyPayment: line.equipment?.monthlyPayment || 0,
-          earlyTerminationFee: line.earlyTerminationFee,
-        }))
+        lines: analyzedData.lines.map((line: LineData) => {
+          const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone');
+          
+          return {
+            deviceName: line.deviceName,
+            phoneNumber: line.phoneNumber,
+            lineType: line.lineType,
+            remainingPayments: phoneEquipment?.remainingPayments || 0,
+            monthlyPayment: phoneEquipment?.monthlyPayment || 0,
+            earlyTerminationFee: line.earlyTerminationFee,
+          };
+        })
       };
       
       setLineDetails(lineFormData);
       
-      // Calculate switching costs automatically
       const totalDevicePayments = analyzedData.lines.reduce((sum: number, line: LineData) => {
-        return sum + (line.equipment?.totalBalance || 0);
-      }, 0);
-      
-      // Add accessory payments
-      const totalAccessoryPayments = analyzedData.accessories.reduce((sum: number, accessory: Equipment) => {
-        return sum + accessory.totalBalance;
+        if (!line.equipment || line.equipment.length === 0) return sum;
+        
+        return sum + line.equipment.reduce((lineSum, eq) => {
+          return lineSum + eq.totalBalance;
+        }, 0);
       }, 0);
       
       const totalTerminationFees = analyzedData.lines.reduce((sum: number, line: LineData) => {
@@ -102,9 +101,8 @@ const BillAnalysis = () => {
       
       setSwitchingCosts({
         devicePayments: totalDevicePayments,
-        accessoryPayments: totalAccessoryPayments,
         terminationFees: totalTerminationFees,
-        total: totalDevicePayments + totalAccessoryPayments + totalTerminationFees,
+        total: totalDevicePayments + totalTerminationFees,
         lineCount: analyzedData.lines.length
       });
     }
@@ -117,7 +115,6 @@ const BillAnalysis = () => {
     setCoverageData(coverageMap);
     setLocationCheckComplete(true);
     
-    // Skip the manual line details form if we have AI-analyzed data
     if (aiAnalyzedData) {
       setLineDetailsComplete(true);
       setAnalyzingBill(true);
@@ -154,7 +151,6 @@ const BillAnalysis = () => {
     }, 3000);
   };
   
-  // Group lines by type for the analysis results display
   const getLineCountByType = () => {
     if (!lineDetails) return {};
     
@@ -166,7 +162,6 @@ const BillAnalysis = () => {
     }, {});
   };
 
-  // Get total data usage across all lines
   const getTotalDataUsage = () => {
     if (!aiAnalyzedData) return 0;
     
@@ -200,20 +195,7 @@ const BillAnalysis = () => {
             <LineDetailsForm onComplete={handleLineDetailsComplete} initialData={aiAnalyzedData?.lines} />
           ) : (
             <div className="space-y-12">
-              {analyzingBill ? (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center space-y-4 max-w-lg mx-auto">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 mx-auto flex items-center justify-center animate-pulse">
-                    <Info size={24} className="text-blue-500" />
-                  </div>
-                  <h2 className="text-xl font-semibold">Analyzing Your Bill</h2>
-                  <p className="text-gray-600">
-                    We're processing {fileName}, checking coverage at your locations, and calculating switching costs for {switchingCosts.lineCount} lines.
-                  </p>
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                </div>
-              ) : (
+              {!analyzingBill && (
                 <div className="space-y-12">
                   <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -309,7 +291,7 @@ const BillAnalysis = () => {
                                 <TableHead>Line Type</TableHead>
                                 <TableHead>Plan</TableHead>
                                 <TableHead>Data Usage</TableHead>
-                                <TableHead>Equipment Balance</TableHead>
+                                <TableHead>Equipment & Accessories</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -321,40 +303,24 @@ const BillAnalysis = () => {
                                   <TableCell>{line.planName}</TableCell>
                                   <TableCell>{line.dataUsage} GB</TableCell>
                                   <TableCell>
-                                    {line.equipment ? 
-                                      `$${line.equipment.totalBalance.toFixed(2)}` : 
-                                      '$0.00'}
+                                    {line.equipment && line.equipment.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {line.equipment.map((eq, i) => (
+                                          <div key={i} className="flex items-center text-sm">
+                                            {eq.type === 'Phone' ? (
+                                              <Smartphone size={12} className="mr-1 text-primary" />
+                                            ) : (
+                                              <Laptop size={12} className="mr-1 text-purple-500" />
+                                            )}
+                                            <span>{eq.deviceName}: </span>
+                                            <span className="font-medium ml-1">${eq.totalBalance.toFixed(2)}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400">None</span>
+                                    )}
                                   </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {aiAnalyzedData && aiAnalyzedData.accessories.length > 0 && (
-                      <div className="mb-6">
-                        <h3 className="font-medium mb-3">Accessory Payments</h3>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Accessory</TableHead>
-                                <TableHead>Associated Line</TableHead>
-                                <TableHead>Monthly Payment</TableHead>
-                                <TableHead>Remaining Payments</TableHead>
-                                <TableHead>Total Balance</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {aiAnalyzedData.accessories.map((accessory, index) => (
-                                <TableRow key={index}>
-                                  <TableCell className="font-medium">{accessory.deviceName}</TableCell>
-                                  <TableCell>{accessory.associatedPhoneNumber || 'N/A'}</TableCell>
-                                  <TableCell>${accessory.monthlyPayment.toFixed(2)}</TableCell>
-                                  <TableCell>{accessory.remainingPayments}</TableCell>
-                                  <TableCell className="font-medium">${accessory.totalBalance.toFixed(2)}</TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
@@ -365,42 +331,33 @@ const BillAnalysis = () => {
                     
                     <div className="mt-6 p-4 bg-amber-50 rounded-lg">
                       <h3 className="font-medium mb-2">Switching Costs</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="bg-white rounded-lg p-3 border border-gray-100">
                           <div className="text-xs text-gray-500">Number of Lines</div>
                           <div className="flex items-center mt-1">
                             <Smartphone size={16} className="text-gray-400 mr-1" />
-                            <span className="text-lg font-semibold">{switchingCosts.lineCount}</span>
+                            <span className="text-lg font-semibold">{switchingCosts?.lineCount || 0}</span>
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-3 border border-gray-100">
-                          <div className="text-xs text-gray-500">Device Payments</div>
+                          <div className="text-xs text-gray-500">Device & Accessory Payments</div>
                           <div className="flex items-center mt-1">
                             <DollarSign size={16} className="text-gray-400 mr-1" />
-                            <span className="text-lg font-semibold">${switchingCosts.devicePayments.toFixed(2)}</span>
+                            <span className="text-lg font-semibold">${switchingCosts?.devicePayments.toFixed(2) || '0.00'}</span>
                           </div>
                         </div>
-                        {switchingCosts.accessoryPayments && (
-                          <div className="bg-white rounded-lg p-3 border border-gray-100">
-                            <div className="text-xs text-gray-500">Accessory Payments</div>
-                            <div className="flex items-center mt-1">
-                              <DollarSign size={16} className="text-gray-400 mr-1" />
-                              <span className="text-lg font-semibold">${switchingCosts.accessoryPayments.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        )}
                         <div className="bg-white rounded-lg p-3 border border-gray-100">
                           <div className="text-xs text-gray-500">Termination Fees</div>
                           <div className="flex items-center mt-1">
                             <DollarSign size={16} className="text-gray-400 mr-1" />
-                            <span className="text-lg font-semibold">${switchingCosts.terminationFees.toFixed(2)}</span>
+                            <span className="text-lg font-semibold">${switchingCosts?.terminationFees.toFixed(2) || '0.00'}</span>
                           </div>
                         </div>
                         <div className="bg-white rounded-lg p-3 border border-gray-100">
                           <div className="text-xs text-gray-500">Total to Switch</div>
                           <div className="flex items-center mt-1">
                             <DollarSign size={16} className="text-gray-400 mr-1" />
-                            <span className="text-lg font-semibold text-red-600">${switchingCosts.total.toFixed(2)}</span>
+                            <span className="text-lg font-semibold text-red-600">${switchingCosts?.total.toFixed(2) || '0.00'}</span>
                           </div>
                         </div>
                       </div>
@@ -425,3 +382,4 @@ const BillAnalysis = () => {
 };
 
 export default BillAnalysis;
+

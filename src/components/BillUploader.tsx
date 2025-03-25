@@ -12,7 +12,7 @@ interface Equipment {
   monthlyPayment: number;
   remainingPayments: number;
   totalBalance: number;
-  associatedPhoneNumber?: string;
+  associatedPhoneNumber: string;
   type: 'Phone' | 'Accessory';
 }
 
@@ -23,7 +23,7 @@ interface LineData {
   planName: string;
   monthlyCharge: number;
   dataUsage: number;
-  equipment?: Equipment;
+  equipment?: Equipment[];
   earlyTerminationFee: number;
 }
 
@@ -37,7 +37,6 @@ interface BillData {
   equipmentCosts: number;
   servicesCosts: number;
   lines: LineData[];
-  accessories: Equipment[];
 }
 
 interface BillUploaderProps {
@@ -132,64 +131,71 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     // Simulate AI analysis of the document
     setTimeout(() => {
       // Mock data extraction - in a real implementation, this would be done by AI
-      const accessories: Equipment[] = [
-        {
-          id: "ACC-001",
-          deviceName: "Apple Watch Series 8",
-          monthlyPayment: 24.96,
-          remainingPayments: 24,
-          totalBalance: 599.04,
-          associatedPhoneNumber: "(908) 764-1876",
-          type: "Accessory"
-        },
-        {
-          id: "ACC-002",
-          deviceName: "Samsung Galaxy Watch 5",
-          monthlyPayment: 12.46,
-          remainingPayments: 12,
-          totalBalance: 149.52,
-          associatedPhoneNumber: "(720) 935-9642",
-          type: "Accessory"
-        },
-        {
-          id: "ACC-003",
-          deviceName: "Wireless Charger",
-          monthlyPayment: 4.99,
-          remainingPayments: 6,
-          totalBalance: 29.94,
-          type: "Accessory"
-        }
-      ];
-      
-      const phones: Equipment[] = [
+      const mockEquipmentData: Equipment[] = [
         {
           id: "PHN-001",
           deviceName: "iPhone 14 Pro",
-          monthlyPayment: 46.47,
+          monthlyPayment: 33.34,
           remainingPayments: 18,
-          totalBalance: 836.46,
+          totalBalance: 600.12,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Phone"
         },
         {
+          id: "ACC-001",
+          deviceName: "Apple Watch Series 8",
+          monthlyPayment: 20.84,
+          remainingPayments: 12,
+          totalBalance: 250.08,
+          associatedPhoneNumber: "(908) 764-1876",
+          type: "Accessory"
+        },
+        {
+          id: "PHN-002",
+          deviceName: "Samsung Galaxy S23",
+          monthlyPayment: 29.17,
+          remainingPayments: 24,
+          totalBalance: 700.08,
+          associatedPhoneNumber: "(720) 935-9642",
+          type: "Phone"
+        },
+        {
+          id: "ACC-002",
+          deviceName: "Samsung Galaxy Watch 5",
+          monthlyPayment: 12.50,
+          remainingPayments: 12,
+          totalBalance: 150.00,
+          associatedPhoneNumber: "(720) 935-9642",
+          type: "Accessory"
+        },
+        {
           id: "PHN-003",
           deviceName: "Google Pixel 7",
-          monthlyPayment: 16.25,
+          monthlyPayment: 25.00,
           remainingPayments: 12,
-          totalBalance: 195.00,
+          totalBalance: 300.00,
           associatedPhoneNumber: "(720) 394-1781",
           type: "Phone"
         },
         {
           id: "PHN-009",
           deviceName: "Mobile Hotspot",
-          monthlyPayment: 30.00,
-          remainingPayments: 24,
-          totalBalance: 720.00,
+          monthlyPayment: 10.00,
+          remainingPayments: 18,
+          totalBalance: 180.00,
           associatedPhoneNumber: "(754) 262-7874",
           type: "Phone"
         }
       ];
+
+      // Organize equipment by phone number for the lines
+      const equipmentByPhoneNumber: Record<string, Equipment[]> = {};
+      mockEquipmentData.forEach(equipment => {
+        if (!equipmentByPhoneNumber[equipment.associatedPhoneNumber]) {
+          equipmentByPhoneNumber[equipment.associatedPhoneNumber] = [];
+        }
+        equipmentByPhoneNumber[equipment.associatedPhoneNumber].push(equipment);
+      });
 
       const mockAnalyzedData: BillData = {
         carrier: "AT&T",
@@ -200,7 +206,6 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         planCosts: 140.00,
         equipmentCosts: 85.17,
         servicesCosts: 17.35,
-        accessories: accessories,
         lines: [
           {
             phoneNumber: "(908) 764-1876",
@@ -209,7 +214,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Unlimited Plus",
             monthlyCharge: 55.00,
             dataUsage: 9.8,
-            equipment: phones[0],
+            equipment: equipmentByPhoneNumber["(908) 764-1876"] || [],
             earlyTerminationFee: 150,
           },
           {
@@ -219,6 +224,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Unlimited Basic",
             monthlyCharge: 45.00,
             dataUsage: 6.2,
+            equipment: equipmentByPhoneNumber["(720) 935-9642"] || [],
             earlyTerminationFee: 0,
           },
           {
@@ -228,7 +234,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Basic Voice Plan",
             monthlyCharge: 40.00,
             dataUsage: 4.5,
-            equipment: phones[1],
+            equipment: equipmentByPhoneNumber["(720) 394-1781"] || [],
             earlyTerminationFee: 75,
           },
           {
@@ -238,6 +244,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Basic Voice Plan",
             monthlyCharge: 40.00,
             dataUsage: 3.2,
+            equipment: [],
             earlyTerminationFee: 0,
           },
           {
@@ -247,6 +254,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Basic Voice Plan",
             monthlyCharge: 40.00,
             dataUsage: 2.1,
+            equipment: [],
             earlyTerminationFee: 0,
           },
           {
@@ -256,6 +264,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Wearable Plan",
             monthlyCharge: 10.00,
             dataUsage: 0.3,
+            equipment: [],
             earlyTerminationFee: 75,
           },
           {
@@ -265,6 +274,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Wearable Plan",
             monthlyCharge: 10.00,
             dataUsage: 0.2,
+            equipment: [],
             earlyTerminationFee: 50,
           },
           {
@@ -274,6 +284,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Mobile Internet Plan",
             monthlyCharge: 20.00,
             dataUsage: 1.8,
+            equipment: [],
             earlyTerminationFee: 0,
           },
           {
@@ -283,7 +294,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
             planName: "Mobile Internet Plan",
             monthlyCharge: 20.00,
             dataUsage: 5.7,
-            equipment: phones[2],
+            equipment: equipmentByPhoneNumber["(754) 262-7874"] || [],
             earlyTerminationFee: 100,
           }
         ]

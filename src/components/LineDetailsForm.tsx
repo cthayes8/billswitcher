@@ -30,9 +30,30 @@ const lineSchema = z.object({
 
 type LineFormValues = z.infer<typeof lineSchema>;
 
+interface Equipment {
+  id: string;
+  deviceName: string;
+  monthlyPayment: number;
+  remainingPayments: number;
+  totalBalance: number;
+  associatedPhoneNumber: string;
+  type: 'Phone' | 'Accessory';
+}
+
+interface LineData {
+  phoneNumber: string;
+  deviceName: string;
+  lineType: string;
+  planName: string;
+  monthlyCharge: number;
+  dataUsage: number;
+  equipment?: Equipment[];
+  earlyTerminationFee: number;
+}
+
 interface LineDetailsFormProps {
   onComplete: (lineDetails: LineFormValues) => void;
-  initialData?: any[];
+  initialData?: LineData[];
 }
 
 const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialData }) => {
@@ -40,14 +61,19 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
   
   // Prepare initial values
   const defaultValues = {
-    lines: initialData ? initialData.map(line => ({
-      deviceName: line.deviceName || '',
-      phoneNumber: line.phoneNumber || '',
-      lineType: line.lineType || '',
-      remainingPayments: line.remainingPayments || 0,
-      monthlyPayment: line.monthlyPayment || 0,
-      earlyTerminationFee: line.earlyTerminationFee || 0,
-    })) : [
+    lines: initialData ? initialData.map(line => {
+      // Get the phone equipment if any
+      const phoneEquipment = line.equipment?.find(eq => eq.type === 'Phone');
+      
+      return {
+        deviceName: line.deviceName || '',
+        phoneNumber: line.phoneNumber || '',
+        lineType: line.lineType || '',
+        remainingPayments: phoneEquipment?.remainingPayments || 0,
+        monthlyPayment: phoneEquipment?.monthlyPayment || 0,
+        earlyTerminationFee: line.earlyTerminationFee || 0,
+      };
+    }) : [
       {
         deviceName: '',
         phoneNumber: '',
