@@ -13,12 +13,15 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, Smartphone, DollarSign, Sparkles } from 'lucide-react';
+import { Plus, Minus, Smartphone, DollarSign, Sparkles, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const lineSchema = z.object({
   lines: z.array(z.object({
     deviceName: z.string().min(1, "Device name is required"),
+    phoneNumber: z.string().optional(),
+    lineType: z.string().optional(),
     remainingPayments: z.number().min(0, "Must be 0 or greater"),
     monthlyPayment: z.number().min(0, "Must be 0 or greater"),
     earlyTerminationFee: z.number().min(0, "Must be 0 or greater"),
@@ -39,12 +42,16 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
   const defaultValues = {
     lines: initialData ? initialData.map(line => ({
       deviceName: line.deviceName || '',
+      phoneNumber: line.phoneNumber || '',
+      lineType: line.lineType || '',
       remainingPayments: line.remainingPayments || 0,
       monthlyPayment: line.monthlyPayment || 0,
       earlyTerminationFee: line.earlyTerminationFee || 0,
     })) : [
       {
         deviceName: '',
+        phoneNumber: '',
+        lineType: '',
         remainingPayments: 0,
         monthlyPayment: 0,
         earlyTerminationFee: 0,
@@ -66,6 +73,8 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
   const addLine = () => {
     append({
       deviceName: '',
+      phoneNumber: '',
+      lineType: '',
       remainingPayments: 0,
       monthlyPayment: 0,
       earlyTerminationFee: 0,
@@ -91,6 +100,19 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
     });
     
     onComplete(data);
+  };
+
+  const getLineTypeColor = (lineType: string = '') => {
+    switch(lineType.toLowerCase()) {
+      case 'voice':
+        return 'bg-blue-100 text-blue-800';
+      case 'wearable':
+        return 'bg-purple-100 text-purple-800';
+      case 'mobile internet':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -120,7 +142,23 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
           {fields.map((field, index) => (
             <div key={field.id} className="p-4 border border-gray-100 rounded-lg">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">Line {index + 1}</h3>
+                <div className="flex items-center space-x-3">
+                  <h3 className="font-medium">Line {index + 1}</h3>
+                  
+                  {form.getValues().lines[index].phoneNumber && (
+                    <div className="text-sm text-gray-500 flex items-center">
+                      <Phone size={14} className="mr-1" />
+                      {form.getValues().lines[index].phoneNumber}
+                    </div>
+                  )}
+                  
+                  {form.getValues().lines[index].lineType && (
+                    <Badge className={`${getLineTypeColor(form.getValues().lines[index].lineType)}`}>
+                      {form.getValues().lines[index].lineType}
+                    </Badge>
+                  )}
+                </div>
+                
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -134,6 +172,25 @@ const LineDetailsForm: React.FC<LineDetailsFormProps> = ({ onComplete, initialDa
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name={`lines.${index}.phoneNumber`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <div className="flex items-center space-x-2">
+                          <Phone size={16} />
+                          <span>Phone Number</span>
+                        </div>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. (555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control}
                   name={`lines.${index}.deviceName`}

@@ -7,7 +7,7 @@ import LocationChecker from '@/components/LocationChecker';
 import LineDetailsForm from '@/components/LineDetailsForm';
 import CarrierComparison from '@/components/CarrierComparison';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Info, DollarSign, Smartphone } from 'lucide-react';
+import { ArrowLeft, Info, DollarSign, Smartphone, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCurrentCarrier, getRecommendedCarriers } from '@/lib/carrierData';
 
@@ -34,6 +34,8 @@ const BillAnalysis = () => {
       const lineFormData = {
         lines: analyzedData.lines.map((line: any) => ({
           deviceName: line.deviceName,
+          phoneNumber: line.phoneNumber,
+          lineType: line.lineType,
           remainingPayments: line.remainingPayments,
           monthlyPayment: line.monthlyPayment,
           earlyTerminationFee: line.earlyTerminationFee,
@@ -104,6 +106,18 @@ const BillAnalysis = () => {
     }, 3000);
   };
   
+  // Group lines by type for the analysis results display
+  const getLineCountByType = () => {
+    if (!lineDetails) return {};
+    
+    return lineDetails.lines.reduce((acc: any, line: any) => {
+      const type = line.lineType || 'Unknown';
+      if (!acc[type]) acc[type] = 0;
+      acc[type]++;
+      return acc;
+    }, {});
+  };
+  
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
@@ -146,21 +160,38 @@ const BillAnalysis = () => {
                 <div className="space-y-12">
                   <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                     <h2 className="text-xl font-semibold mb-4">Analysis Results</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Your Monthly Usage</h3>
-                        <div className="text-2xl font-bold">8.2 GB</div>
-                        <div className="text-sm text-gray-600">of data</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Talk Time</h3>
-                        <div className="text-2xl font-bold">320 mins</div>
-                        <div className="text-sm text-gray-600">monthly average</div>
-                      </div>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Text Messages</h3>
-                        <div className="text-2xl font-bold">842</div>
-                        <div className="text-sm text-gray-600">monthly average</div>
+                    
+                    <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                      <h3 className="font-medium mb-2">Account Summary</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <div className="text-sm font-medium flex items-center">
+                            <Phone size={16} className="mr-2 text-blue-600" />
+                            Line Count by Type
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            {Object.entries(getLineCountByType()).map(([type, count]: [string, any]) => (
+                              <div key={type} className="flex justify-between text-sm">
+                                <span>{type}:</span>
+                                <span className="font-medium">{count}</span>
+                              </div>
+                            ))}
+                            <div className="border-t pt-1 flex justify-between text-sm font-semibold">
+                              <span>Total Lines:</span>
+                              <span>{switchingCosts.lineCount}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h3 className="text-sm font-medium text-gray-500 mb-1">Your Monthly Usage</h3>
+                          <div className="text-2xl font-bold">8.2 GB</div>
+                          <div className="text-sm text-gray-600">of data</div>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h3 className="text-sm font-medium text-gray-500 mb-1">Talk Time</h3>
+                          <div className="text-2xl font-bold">320 mins</div>
+                          <div className="text-sm text-gray-600">monthly average</div>
+                        </div>
                       </div>
                     </div>
                     
