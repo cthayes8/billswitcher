@@ -109,19 +109,66 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         }
         
         const result = await res.json();
-        console.log("AI extracted bill data:", result.output);
+        console.log("AI extracted bill data:", result);
         
-        if (result.output) {
-          setUploadProgress(100);
-          setUploadStatus('success');
-          onUploadComplete(file.name, result.output);
-          
-          toast({
-            title: "Bill analysis complete",
-            description: `Successfully analyzed your bill`,
-          });
+        // Transform the received data into our expected BillData format
+        if (result) {
+          // Check the structure of the received data
+          if (result.account_summary && result.phones) {
+            // Transform the data into our BillData format
+            const transformedData: BillData = {
+              carrier: "T-Mobile", // Assuming T-Mobile since that's what we see in the response
+              accountNumber: result.account_summary?.account_number || "Unknown",
+              billDate: result.account_summary?.bill_date || "Unknown",
+              totalAmount: parseFloat(result.account_summary?.total_monthly_bill?.replace('$', '') || "0"),
+              dueDate: result.account_summary?.due_date || "Unknown",
+              planCosts: parseFloat(result.account_summary?.plan_costs?.replace('$', '') || "0"),
+              equipmentCosts: parseFloat(result.account_summary?.equipment_costs?.replace('$', '') || "0"),
+              servicesCosts: parseFloat(result.account_summary?.services_and_fees?.replace('$', '') || "0"),
+              lines: result.phones.map((phone: any) => {
+                // Transform each phone line
+                const lineData: LineData = {
+                  phoneNumber: phone.phone_number || "Unknown",
+                  deviceName: phone.equipment && phone.equipment.length > 0 
+                    ? phone.equipment.find((eq: any) => eq.type === 'Phone')?.model || "Unknown Device"
+                    : "Unknown Device",
+                  lineType: phone.plan?.name?.includes("Tablet") 
+                    ? "Tablet" 
+                    : phone.plan?.name?.includes("Watch") 
+                    ? "Watch" 
+                    : "Voice",
+                  planName: phone.plan?.name || "Unknown Plan",
+                  monthlyCharge: parseFloat(phone.plan?.charge?.replace('$', '') || "0"),
+                  dataUsage: parseFloat(phone.data_usage_gb || "0"),
+                  earlyTerminationFee: 0, // Assuming no ETF for now
+                  equipment: phone.equipment?.map((eq: any) => ({
+                    id: crypto.randomUUID(),
+                    deviceName: eq.model || "Unknown Device",
+                    monthlyPayment: parseFloat(eq.installment_info?.monthly_payment?.replace('$', '') || "0"),
+                    remainingPayments: parseInt(eq.installment_info?.installment?.split(' of ')[1] || "0") - 
+                                      parseInt(eq.installment_info?.installment?.split(' of ')[0] || "0"),
+                    totalBalance: parseFloat(eq.installment_info?.balance?.replace(/[$,]/g, '') || "0"),
+                    associatedPhoneNumber: phone.phone_number || "Unknown",
+                    type: eq.type as 'Phone' | 'Watch' | 'Tablet' | 'Accessory',
+                  }))
+                };
+                return lineData;
+              })
+            };
+            
+            setUploadProgress(100);
+            setUploadStatus('success');
+            onUploadComplete(file.name, transformedData);
+            
+            toast({
+              title: "Bill analysis complete",
+              description: `Successfully analyzed your bill`,
+            });
+          } else {
+            throw new Error("Unexpected data format from the analysis service");
+          }
         } else {
-          throw new Error("No output received from the analysis service");
+          throw new Error("No data received from the analysis service");
         }
       } catch (error) {
         console.error("Error processing bill:", error);
