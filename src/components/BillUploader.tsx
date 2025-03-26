@@ -95,67 +95,67 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     setTimeout(() => {
       const mockEquipmentData: Equipment[] = [
         {
-          id: "iphone16pro-9692",
+          id: "iphone16pro-1876",
           deviceName: "iPhone 16 Pro - White Titanium - 256GB",
           monthlyPayment: 45.84,
           remainingPayments: 4,
           totalBalance: 962.47,
-          associatedPhoneNumber: "(720) 935-9692",
+          associatedPhoneNumber: "(908) 764-1876",
           type: "Phone" // Now using literal type instead of string
         },
         {
-          id: "airpods4-9692",
+          id: "airpods4-1876",
           deviceName: "Apple AirPods 4 with Active Noise Cancellation",
           monthlyPayment: 15.00,
           remainingPayments: 4,
           totalBalance: 134.99,
-          associatedPhoneNumber: "(720) 935-9692",
+          associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory" // Now using literal type instead of string
         },
         {
-          id: "screenprotector-9692",
+          id: "screenprotector-1876",
           deviceName: "GoTo™ Tempered Glass Screen Protector for Apple iPhone 16 Pro",
           monthlyPayment: 3.34,
           remainingPayments: 4,
           totalBalance: 29.97,
-          associatedPhoneNumber: "(720) 935-9692",
+          associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory" // Now using literal type instead of string
         },
         {
-          id: "clearcase-9692",
+          id: "clearcase-1876",
           deviceName: "Apple Clear Case with MagSafe for Apple iPhone 16 Pro",
           monthlyPayment: 4.17,
           remainingPayments: 3,
           totalBalance: 41.65,
-          associatedPhoneNumber: "(720) 935-9692",
+          associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory" // Now using literal type instead of string
         },
         {
-          id: "siliconecase-9692",
+          id: "siliconecase-1876",
           deviceName: "Apple Silicone Case with MagSafe for Apple iPhone 16 Pro Max",
           monthlyPayment: 4.17,
           remainingPayments: 3,
           totalBalance: 41.65,
-          associatedPhoneNumber: "(720) 935-9692",
+          associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory" // Now using literal type instead of string
         },
         {
-          id: "watchcharger-9692",
+          id: "watchcharger-1876",
           deviceName: "Apple Watch Magnetic Fast Charger to USB-C Cable, 1m",
           monthlyPayment: 2.50,
           remainingPayments: 3,
           totalBalance: 24.99,
-          associatedPhoneNumber: "(720) 935-9692",
+          associatedPhoneNumber: "(908) 764-1876",
           type: "Accessory" // Now using literal type instead of string
         },
         
         {
-          id: "iphone16promax-1876",
+          id: "iphone16promax-1781",
           deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
           monthlyPayment: 50.00,
           remainingPayments: 4,
           totalBalance: 1049.99,
-          associatedPhoneNumber: "(908) 764-1876",
+          associatedPhoneNumber: "(720) 394-1781",
           type: "Phone" // Now using literal type instead of string
         },
         
