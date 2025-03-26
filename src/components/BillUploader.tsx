@@ -94,43 +94,82 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     setTimeout(() => {
       const mockEquipmentData = [
         {
-          id: "20241205110531258",
+          id: "iphone16pro-9692",
           deviceName: "iPhone 16 Pro - White Titanium - 256GB",
           monthlyPayment: 45.84,
-          remainingPayments: 20,
-          totalBalance: 916.80,
+          remainingPayments: 4,
+          totalBalance: 962.47,
+          associatedPhoneNumber: "(720) 935-9692",
+          type: "Phone"
+        },
+        {
+          id: "airpods4-9692",
+          deviceName: "Apple AirPods 4 with Active Noise Cancellation",
+          monthlyPayment: 15.00,
+          remainingPayments: 4,
+          totalBalance: 134.99,
+          associatedPhoneNumber: "(720) 935-9692",
+          type: "Accessory"
+        },
+        {
+          id: "screenprotector-9692",
+          deviceName: "GoTo™ Tempered Glass Screen Protector for Apple iPhone 16 Pro",
+          monthlyPayment: 3.34,
+          remainingPayments: 4,
+          totalBalance: 29.97,
+          associatedPhoneNumber: "(720) 935-9692",
+          type: "Accessory"
+        },
+        {
+          id: "clearcase-9692",
+          deviceName: "Apple Clear Case with MagSafe for Apple iPhone 16 Pro",
+          monthlyPayment: 4.17,
+          remainingPayments: 3,
+          totalBalance: 41.65,
+          associatedPhoneNumber: "(720) 935-9692",
+          type: "Accessory"
+        },
+        {
+          id: "siliconecase-9692",
+          deviceName: "Apple Silicone Case with MagSafe for Apple iPhone 16 Pro Max",
+          monthlyPayment: 4.17,
+          remainingPayments: 3,
+          totalBalance: 41.65,
+          associatedPhoneNumber: "(720) 935-9692",
+          type: "Accessory"
+        },
+        {
+          id: "watchcharger-9692",
+          deviceName: "Apple Watch Magnetic Fast Charger to USB-C Cable, 1m",
+          monthlyPayment: 2.50,
+          remainingPayments: 3,
+          totalBalance: 24.99,
+          associatedPhoneNumber: "(720) 935-9692",
+          type: "Accessory"
+        },
+        
+        {
+          id: "iphone16promax-1876",
+          deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
+          monthlyPayment: 50.00,
+          remainingPayments: 4,
+          totalBalance: 1049.99,
           associatedPhoneNumber: "(908) 764-1876",
           type: "Phone"
         },
+        
         {
-          id: "20241205110531193",
-          deviceName: "iPhone 16 Pro Max - Natural Titanium - 256GB",
-          monthlyPayment: 50.00,
-          remainingPayments: 20,
-          totalBalance: 1000.00,
-          associatedPhoneNumber: "(720) 394-1781",
-          type: "Phone"
-        },
-        {
-          id: "20230715110544754",
-          deviceName: "Watch Ultra 49mm",
-          monthlyPayment: 33.34,
-          remainingPayments: 4,
-          totalBalance: 133.36,
-          associatedPhoneNumber: "(954) 393-2341",
-          type: "Watch"
-        },
-        {
-          id: "20230715110544754",
+          id: "watchseries8-2478",
           deviceName: "Watch Series 8 41mm",
           monthlyPayment: 20.84,
-          remainingPayments: 4,
-          totalBalance: 83.36,
+          remainingPayments: 20,
+          totalBalance: 166.53,
           associatedPhoneNumber: "(954) 393-2478",
           type: "Watch"
         },
+        
         {
-          id: "20240710110862253",
+          id: "ipadpro-7874",
           deviceName: "iPad Pro 13-inch (M4)",
           monthlyPayment: 30.00,
           remainingPayments: 11,
@@ -138,60 +177,17 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           associatedPhoneNumber: "(754) 262-7874",
           type: "Tablet"
         },
+        
         {
-          id: "20241205110531258",
-          deviceName: "Apple AirPods 4 with Active Noise Cancellation",
-          monthlyPayment: 15.00,
-          remainingPayments: 8,
-          totalBalance: 120.00,
-          associatedPhoneNumber: "(908) 764-1876",
-          type: "Accessory"
-        },
-        {
-          id: "20241205110531258",
-          deviceName: "GoTo™ Tempered Glass Screen Protector for Apple iPhone 16 Pro",
-          monthlyPayment: 3.34,
-          remainingPayments: 8,
-          totalBalance: 26.72,
-          associatedPhoneNumber: "(908) 764-1876",
-          type: "Accessory"
-        },
-        {
-          id: "20250104110953267",
-          deviceName: "Apple Silicone Case with MagSafe for Apple iPhone 16 Pro Max",
-          monthlyPayment: 4.17,
-          remainingPayments: 9,
-          totalBalance: 37.53,
-          associatedPhoneNumber: "(720) 394-1781",
-          type: "Accessory"
-        },
-        {
-          id: "20250104110953267",
-          deviceName: "Apple Clear Case with MagSafe for Apple iPhone 16 Pro",
-          monthlyPayment: 4.17,
-          remainingPayments: 9,
-          totalBalance: 37.53,
-          associatedPhoneNumber: "(908) 764-1876",
-          type: "Accessory"
-        },
-        {
-          id: "20250104110953267",
-          deviceName: "Apple Watch Magnetic Fast Charger to USB-C Cable, 1m",
-          monthlyPayment: 2.50,
-          remainingPayments: 9,
-          totalBalance: 22.50,
+          id: "watchultra-2341",
+          deviceName: "Watch Ultra 49mm",
+          monthlyPayment: 33.34,
+          remainingPayments: 20,
+          totalBalance: 166.53,
           associatedPhoneNumber: "(954) 393-2341",
-          type: "Accessory"
+          type: "Watch"
         }
       ];
-
-      const equipmentByPhoneNumber = {};
-      mockEquipmentData.forEach(equipment => {
-        if (!equipmentByPhoneNumber[equipment.associatedPhoneNumber]) {
-          equipmentByPhoneNumber[equipment.associatedPhoneNumber] = [];
-        }
-        equipmentByPhoneNumber[equipment.associatedPhoneNumber].push(equipment);
-      });
 
       const phoneNumberToDataUsage = {
         "(720) 935-9692": 27.29,
@@ -207,39 +203,51 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
 
       const phoneNumberToLineCosts = {
         "Account": { plans: 42.50, equipment: 0, services: 0.00, total: 42.50 },
-        "(908) 764-1876": { plans: 0, equipment: 46.47, services: 0, total: 46.47 },
-        "(720) 935-9642": { plans: 0, equipment: 0, services: 0, total: 0.00 },
-        "(720) 394-1781": { plans: 11.25, equipment: 16.25, services: 0, total: 27.50 },
-        "(720) 935-9692": { plans: 11.25, equipment: 0, services: 19.26, total: 30.51 },
+        "(720) 935-9692": { plans: 11.25, equipment: 45.84, services: 0, total: 57.09 },
+        "(908) 764-1876": { plans: 11.25, equipment: 50.00, services: 0, total: 61.25 },
+        "(720) 394-1781": { plans: 11.25, equipment: 0, services: 0, total: 11.25 },
         "(720) 998-3263": { plans: 11.25, equipment: 0, services: 0, total: 11.25 },
-        "(954) 393-2341": { plans: 1.87, equipment: 24.96, services: 0, total: 26.83 },
-        "(954) 393-2478": { plans: 3.75, equipment: 12.46, services: 0, total: 16.21 },
         "(754) 249-8647": { plans: 5.00, equipment: 0, services: 0, total: 5.00 },
-        "(754) 262-7874": { plans: 6.25, equipment: 30.00, services: 0, total: 36.25 }
+        "(720) 935-9642": { plans: 0, equipment: 0, services: 0, total: 0.00 },
+        "(954) 393-2478": { plans: 3.75, equipment: 20.84, services: 0, total: 24.59 },
+        "(754) 262-7874": { plans: 6.25, equipment: 30.00, services: 0, total: 36.25 },
+        "(954) 393-2341": { plans: 1.87, equipment: 33.34, services: 0, total: 35.21 }
       };
 
       const allPhoneNumbers = Object.keys(phoneNumberToDataUsage);
       
       const allLines = allPhoneNumbers.map((phoneNumber) => {
-        const phoneEquipment = equipmentByPhoneNumber[phoneNumber]?.find(eq => 
-          eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet'
+        const phoneEquipment = mockEquipmentData.find(eq => 
+          eq.associatedPhoneNumber === phoneNumber && 
+          (eq.type === 'Phone' || eq.type === 'Watch' || eq.type === 'Tablet')
         );
+        
+        let lineType = "Voice";
+        if (phoneNumber === "(754) 262-7874" || phoneNumber === "(754) 249-8647") {
+          lineType = "Mobile Internet";
+        } else if (phoneNumber === "(954) 393-2341" || phoneNumber === "(954) 393-2478") {
+          lineType = "Wearable";
+        }
 
-        const lineType = phoneNumber.includes("262-7874") || phoneNumber.includes("249-8647") ? "Mobile Internet" : 
-                        (phoneNumber.includes("393-2341") || phoneNumber.includes("393-2478")) ? "Wearable" : 
-                        "Voice";
+        let planName = "Magenta MAX";
+        if (lineType === "Mobile Internet") {
+          planName = "Mobile Internet 2.0GB";
+        } else if (lineType === "Wearable") {
+          planName = "Wearable 1.0GB";
+        }
 
         const lineCosts = phoneNumberToLineCosts[phoneNumber] || { plans: 0, equipment: 0, services: 0, total: 0 };
 
+        const lineEquipment = mockEquipmentData.filter(eq => eq.associatedPhoneNumber === phoneNumber);
+
         return {
           phoneNumber: phoneNumber,
-          deviceName: phoneEquipment?.deviceName || "Bring Your Own Device",
+          deviceName: phoneEquipment?.deviceName || "None",
           lineType: lineType,
-          planName: lineType === "Voice" ? "Magenta MAX" : 
-                    lineType === "Wearable" ? "Wearable Plan" : "Mobile Internet Plan",
+          planName: planName,
           monthlyCharge: lineCosts.plans,
           dataUsage: phoneNumberToDataUsage[phoneNumber] || 0,
-          equipment: equipmentByPhoneNumber[phoneNumber] || [],
+          equipment: lineEquipment,
           earlyTerminationFee: 0
         };
       });
@@ -247,9 +255,9 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
       const mockAnalyzedData = {
         carrier: "T-Mobile",
         accountNumber: "123456789",
-        billDate: "2023-07-15",
+        billDate: "3/7/25",
         totalAmount: 242.52,
-        dueDate: "2023-08-01",
+        dueDate: "3/25/25",
         planCosts: 93.12,
         equipmentCosts: 130.14,
         servicesCosts: 19.26,

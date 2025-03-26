@@ -101,7 +101,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                             <div className="text-gray-600">Monthly payment:</div>
                             <div className="font-medium">${eq.monthlyPayment.toFixed(2)}</div>
                             
-                            <div className="text-gray-600">Remaining payments:</div>
+                            <div className="text-gray-600">Installment:</div>
                             <div className="font-medium">
                               {eq.remainingPayments} of {eq.type === 'Phone' ? '24' : eq.type === 'Watch' ? '24' : '12'}
                             </div>
@@ -112,7 +112,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                         </div>
                       ))}
                       
-                      {handsets.length > 1 && (
+                      {handsets.length > 0 && (
                         <div className="border-t border-gray-200 pt-2 mt-2">
                           <div className="grid grid-cols-2 gap-2 text-sm font-medium">
                             <div className="text-gray-700">Total handset balance:</div>
@@ -140,7 +140,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                             <div className="text-gray-600">Monthly payment:</div>
                             <div className="font-medium">${eq.monthlyPayment.toFixed(2)}</div>
                             
-                            <div className="text-gray-600">Remaining payments:</div>
+                            <div className="text-gray-600">Installment:</div>
                             <div className="font-medium">
                               {eq.remainingPayments} of 12
                             </div>
@@ -151,7 +151,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                         </div>
                       ))}
                       
-                      {accessories.length > 1 && (
+                      {accessories.length > 0 && (
                         <div className="border-t border-gray-200 pt-2 mt-2">
                           <div className="grid grid-cols-2 gap-2 text-sm font-medium">
                             <div className="text-gray-700">Total accessory balance:</div>
