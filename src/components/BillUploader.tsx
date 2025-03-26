@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, File, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { BillData } from '@/interfaces/BillTypes';
+import { BillData, Equipment } from '@/interfaces/BillTypes';
 
 interface BillUploaderProps {
   onUploadComplete: (fileName: string, analyzedData?: BillData) => void;
@@ -92,7 +93,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     setUploadStatus('analyzing');
     
     setTimeout(() => {
-      const mockEquipmentData = [
+      const mockEquipmentData: Equipment[] = [
         {
           id: "iphone16pro-9692",
           deviceName: "iPhone 16 Pro - White Titanium - 256GB",
@@ -100,7 +101,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 4,
           totalBalance: 962.47,
           associatedPhoneNumber: "(720) 935-9692",
-          type: "Phone"
+          type: "Phone" // Now using literal type instead of string
         },
         {
           id: "airpods4-9692",
@@ -109,7 +110,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 4,
           totalBalance: 134.99,
           associatedPhoneNumber: "(720) 935-9692",
-          type: "Accessory"
+          type: "Accessory" // Now using literal type instead of string
         },
         {
           id: "screenprotector-9692",
@@ -118,7 +119,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 4,
           totalBalance: 29.97,
           associatedPhoneNumber: "(720) 935-9692",
-          type: "Accessory"
+          type: "Accessory" // Now using literal type instead of string
         },
         {
           id: "clearcase-9692",
@@ -127,7 +128,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 3,
           totalBalance: 41.65,
           associatedPhoneNumber: "(720) 935-9692",
-          type: "Accessory"
+          type: "Accessory" // Now using literal type instead of string
         },
         {
           id: "siliconecase-9692",
@@ -136,7 +137,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 3,
           totalBalance: 41.65,
           associatedPhoneNumber: "(720) 935-9692",
-          type: "Accessory"
+          type: "Accessory" // Now using literal type instead of string
         },
         {
           id: "watchcharger-9692",
@@ -145,7 +146,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 3,
           totalBalance: 24.99,
           associatedPhoneNumber: "(720) 935-9692",
-          type: "Accessory"
+          type: "Accessory" // Now using literal type instead of string
         },
         
         {
@@ -155,7 +156,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 4,
           totalBalance: 1049.99,
           associatedPhoneNumber: "(908) 764-1876",
-          type: "Phone"
+          type: "Phone" // Now using literal type instead of string
         },
         
         {
@@ -165,7 +166,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 20,
           totalBalance: 166.53,
           associatedPhoneNumber: "(954) 393-2478",
-          type: "Watch"
+          type: "Watch" // Now using literal type instead of string
         },
         
         {
@@ -175,7 +176,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 11,
           totalBalance: 330.00,
           associatedPhoneNumber: "(754) 262-7874",
-          type: "Tablet"
+          type: "Tablet" // Now using literal type instead of string
         },
         
         {
@@ -185,7 +186,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           remainingPayments: 20,
           totalBalance: 166.53,
           associatedPhoneNumber: "(954) 393-2341",
-          type: "Watch"
+          type: "Watch" // Now using literal type instead of string
         }
       ];
 
@@ -252,7 +253,7 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         };
       });
 
-      const mockAnalyzedData = {
+      const mockAnalyzedData: BillData = {
         carrier: "T-Mobile",
         accountNumber: "123456789",
         billDate: "3/7/25",
