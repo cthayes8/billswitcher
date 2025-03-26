@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import AnimatedTransition from '@/components/AnimatedTransition';
@@ -113,9 +112,11 @@ const BillAnalysis = () => {
   const getTotalDataUsage = () => {
     if (!aiAnalyzedData) return 0;
     
-    return aiAnalyzedData.lines.reduce((total: number, line) => {
+    const total = aiAnalyzedData.lines.reduce((total: number, line) => {
       return total + (line.dataUsage || 0);
-    }, 0).toFixed(1);
+    }, 0);
+    
+    return total.toFixed(1);
   };
 
   const handleNextStep = () => {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, File, CheckCircle, AlertCircle, Sparkles, Loader } from 'lucide-react';
@@ -105,6 +104,17 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     processBillWithN8n(file);
   };
 
+  const determineLineType = (planName: string): string => {
+    const planNameLower = planName.toLowerCase();
+    if (planNameLower.includes("watch") || planNameLower.includes("wearable") || planNameLower.includes("digits")) {
+      return "Watch";
+    } else if (planNameLower.includes("tablet") || planNameLower.includes("mobile internet")) {
+      return "Tablet";
+    } else {
+      return "Voice";
+    }
+  };
+
   const processBillWithN8n = async (file: File) => {
     setUploadStatus('uploading');
     setUploadProgress(0);
@@ -134,6 +144,15 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
         if (result) {
           // Check the structure of the received data
           if (result.account_summary && result.phones) {
+            // Calculate total data usage from all phones
+            const totalDataUsage = result.phones.reduce(
+              (acc: number, phone: any) => {
+                const usageValue = phone.data_usage_gb && phone.data_usage_gb !== 'N/A' && phone.data_usage_gb !== 'unknown'
+                  ? parseFloat(phone.data_usage_gb) || 0
+                  : 0;
+                return acc + usageValue;
+              }, 0);
+            
             // Transform the data into our BillData format
             const transformedData: BillData = {
               carrier: result.account_summary?.carrier || "T-Mobile", // Default to T-Mobile if not specified
@@ -144,29 +163,9 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
               planCosts: parseFloat(result.account_summary?.plan_costs?.replace(/[$,]/g, '') || "0"),
               equipmentCosts: parseFloat(result.account_summary?.equipment_costs?.replace(/[$,]/g, '') || "0"),
               servicesCosts: parseFloat(result.account_summary?.services_and_fees?.replace(/[$,]/g, '') || "0"),
-              lines: result.phones.filter(phone => phone.phone_number).map((phone: any) => {
-                // Determine the line type more accurately
-                let lineType: string = "Voice";
-                
-                // Check plan name first for type indicators
-                if (phone.plan?.name) {
-                  const planName = phone.plan.name.toLowerCase();
-                  if (planName.includes("tablet") || planName.includes("mobile internet")) {
-                    lineType = "Tablet";
-                  } else if (planName.includes("watch") || planName.includes("wearable") || planName.includes("digits")) {
-                    lineType = "Watch";
-                  }
-                }
-                
-                // If no type determined from plan name, check equipment
-                if (lineType === "Voice" && phone.equipment && phone.equipment.length > 0) {
-                  const primaryDevice = phone.equipment.find((eq: any) => 
-                    eq.type === 'Tablet' || eq.type === 'Watch' || eq.type === 'Wearable'
-                  );
-                  if (primaryDevice) {
-                    lineType = primaryDevice.type;
-                  }
-                }
+              lines: result.phones.filter((phone: any) => phone.phone_number).map((phone: any) => {
+                // Determine the line type from plan name
+                const lineType = determineLineType(phone.plan?.name || "");
                 
                 // Extract data usage safely
                 let dataUsage = 0;
@@ -192,9 +191,11 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
                   equipment: phone.equipment?.map((eq: any) => {
                     // Normalize the equipment type
                     let normalizedType: 'Phone' | 'Watch' | 'Tablet' | 'Accessory' = 'Accessory';
-                    if (eq.type === 'Phone') normalizedType = 'Phone';
-                    else if (eq.type === 'Wearable' || eq.type?.toLowerCase().includes('watch')) normalizedType = 'Watch';
-                    else if (eq.type === 'Tablet' || eq.type?.toLowerCase().includes('tablet')) normalizedType = 'Tablet';
+                    const eqType = eq.type?.toLowerCase() || '';
+                    
+                    if (eqType.includes('phone')) normalizedType = 'Phone';
+                    else if (eqType.includes('watch') || eqType.includes('wearable')) normalizedType = 'Watch';
+                    else if (eqType.includes('tablet')) normalizedType = 'Tablet';
                     
                     // Extract remaining payments from installment info
                     let remainingPayments = 0;
