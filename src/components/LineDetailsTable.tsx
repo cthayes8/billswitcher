@@ -97,7 +97,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                             {getDeviceIcon(eq.type)}
                             <span className="font-medium text-xs">{eq.deviceName}</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-1 text-xs text-[11px] pl-5">
+                          <div className="grid grid-cols-2 gap-1 text-[10px] pl-5">
                             <div className="text-gray-600">Monthly payment:</div>
                             <div className="font-medium">${eq.monthlyPayment.toFixed(2)}</div>
                             
@@ -114,7 +114,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                       
                       {handsets.length > 0 && (
                         <div className="border-t border-gray-200 pt-2 mt-1">
-                          <div className="grid grid-cols-2 gap-1 text-xs text-[11px] font-medium">
+                          <div className="grid grid-cols-2 gap-1 text-[10px] font-medium">
                             <div className="text-gray-700">Total handset balance:</div>
                             <div className="text-red-600">${handsetsBalance.toFixed(2)}</div>
                           </div>
@@ -136,7 +136,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                             <DollarSign size={14} className="mr-1 text-amber-500" />
                             <span className="font-medium text-xs">{eq.deviceName}</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-1 text-xs text-[11px] pl-5">
+                          <div className="grid grid-cols-2 gap-1 text-[10px] pl-5">
                             <div className="text-gray-600">Monthly payment:</div>
                             <div className="font-medium">${eq.monthlyPayment.toFixed(2)}</div>
                             
@@ -153,7 +153,7 @@ const LineDetailsTable: React.FC<LineDetailsTableProps> = ({ lines }) => {
                       
                       {accessories.length > 0 && (
                         <div className="border-t border-gray-200 pt-2 mt-1">
-                          <div className="grid grid-cols-2 gap-1 text-xs text-[11px] font-medium">
+                          <div className="grid grid-cols-2 gap-1 text-[10px] font-medium">
                             <div className="text-gray-700">Total accessory balance:</div>
                             <div className="text-red-600">${accessoriesBalance.toFixed(2)}</div>
                           </div>
