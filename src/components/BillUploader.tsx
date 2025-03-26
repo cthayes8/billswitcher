@@ -136,40 +136,106 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           if (result.account_summary && result.phones) {
             // Transform the data into our BillData format
             const transformedData: BillData = {
-              carrier: "T-Mobile", // Assuming T-Mobile since that's what we see in the response
+              carrier: result.account_summary?.carrier || "T-Mobile", // Default to T-Mobile if not specified
               accountNumber: result.account_summary?.account_number || "Unknown",
               billDate: result.account_summary?.bill_date || "Unknown",
-              totalAmount: parseFloat(result.account_summary?.total_monthly_bill?.replace('$', '') || "0"),
+              totalAmount: parseFloat(result.account_summary?.total_monthly_bill?.replace(/[$,]/g, '') || "0"),
               dueDate: result.account_summary?.due_date || "Unknown",
-              planCosts: parseFloat(result.account_summary?.plan_costs?.replace('$', '') || "0"),
-              equipmentCosts: parseFloat(result.account_summary?.equipment_costs?.replace('$', '') || "0"),
-              servicesCosts: parseFloat(result.account_summary?.services_and_fees?.replace('$', '') || "0"),
-              lines: result.phones.map((phone: any) => {
+              planCosts: parseFloat(result.account_summary?.plan_costs?.replace(/[$,]/g, '') || "0"),
+              equipmentCosts: parseFloat(result.account_summary?.equipment_costs?.replace(/[$,]/g, '') || "0"),
+              servicesCosts: parseFloat(result.account_summary?.services_and_fees?.replace(/[$,]/g, '') || "0"),
+              lines: result.phones.filter(phone => phone.phone_number).map((phone: any) => {
+                // Determine the line type more accurately
+                let lineType: string = "Voice";
+                
+                // Check plan name first for type indicators
+                if (phone.plan?.name) {
+                  const planName = phone.plan.name.toLowerCase();
+                  if (planName.includes("tablet") || planName.includes("mobile internet")) {
+                    lineType = "Tablet";
+                  } else if (planName.includes("watch") || planName.includes("wearable") || planName.includes("digits")) {
+                    lineType = "Watch";
+                  }
+                }
+                
+                // If no type determined from plan name, check equipment
+                if (lineType === "Voice" && phone.equipment && phone.equipment.length > 0) {
+                  const primaryDevice = phone.equipment.find((eq: any) => 
+                    eq.type === 'Tablet' || eq.type === 'Watch' || eq.type === 'Wearable'
+                  );
+                  if (primaryDevice) {
+                    lineType = primaryDevice.type;
+                  }
+                }
+                
+                // Extract data usage safely
+                let dataUsage = 0;
+                if (phone.data_usage_gb && phone.data_usage_gb !== 'N/A' && phone.data_usage_gb !== 'unknown') {
+                  try {
+                    dataUsage = parseFloat(phone.data_usage_gb);
+                  } catch (e) {
+                    console.warn(`Could not parse data usage: ${phone.data_usage_gb}`);
+                  }
+                }
+                
                 // Transform each phone line
                 const lineData: LineData = {
                   phoneNumber: phone.phone_number || "Unknown",
                   deviceName: phone.equipment && phone.equipment.length > 0 
-                    ? phone.equipment.find((eq: any) => eq.type === 'Phone')?.model || "Unknown Device"
+                    ? phone.equipment.find((eq: any) => ['Phone', 'Tablet', 'Watch', 'Wearable'].includes(eq.type))?.model || "Unknown Device"
                     : "Unknown Device",
-                  lineType: phone.plan?.name?.includes("Tablet") 
-                    ? "Tablet" 
-                    : phone.plan?.name?.includes("Watch") 
-                    ? "Watch" 
-                    : "Voice",
+                  lineType: lineType,
                   planName: phone.plan?.name || "Unknown Plan",
-                  monthlyCharge: parseFloat(phone.plan?.charge?.replace('$', '') || "0"),
-                  dataUsage: parseFloat(phone.data_usage_gb || "0"),
+                  monthlyCharge: parseFloat(phone.plan?.charge?.replace(/[$,]/g, '') || "0"),
+                  dataUsage: dataUsage,
                   earlyTerminationFee: 0, // Assuming no ETF for now
-                  equipment: phone.equipment?.map((eq: any) => ({
-                    id: crypto.randomUUID(),
-                    deviceName: eq.model || "Unknown Device",
-                    monthlyPayment: parseFloat(eq.installment_info?.monthly_payment?.replace('$', '') || "0"),
-                    remainingPayments: parseInt(eq.installment_info?.installment?.split(' of ')[1] || "0") - 
-                                      parseInt(eq.installment_info?.installment?.split(' of ')[0] || "0"),
-                    totalBalance: parseFloat(eq.installment_info?.balance?.replace(/[$,]/g, '') || "0"),
-                    associatedPhoneNumber: phone.phone_number || "Unknown",
-                    type: eq.type as 'Phone' | 'Watch' | 'Tablet' | 'Accessory',
-                  }))
+                  equipment: phone.equipment?.map((eq: any) => {
+                    // Normalize the equipment type
+                    let normalizedType: 'Phone' | 'Watch' | 'Tablet' | 'Accessory' = 'Accessory';
+                    if (eq.type === 'Phone') normalizedType = 'Phone';
+                    else if (eq.type === 'Wearable' || eq.type?.toLowerCase().includes('watch')) normalizedType = 'Watch';
+                    else if (eq.type === 'Tablet' || eq.type?.toLowerCase().includes('tablet')) normalizedType = 'Tablet';
+                    
+                    // Extract remaining payments from installment info
+                    let remainingPayments = 0;
+                    if (eq.installment_info?.installment) {
+                      const installmentParts = eq.installment_info.installment.split(' of ');
+                      if (installmentParts.length === 2) {
+                        const current = parseInt(installmentParts[0], 10);
+                        const total = parseInt(installmentParts[1], 10);
+                        if (!isNaN(current) && !isNaN(total)) {
+                          remainingPayments = total - current;
+                        }
+                      }
+                    }
+                    
+                    // Extract monthly payment
+                    let monthlyPayment = 0;
+                    if (eq.installment_info?.monthly_payment) {
+                      const paymentStr = eq.installment_info.monthly_payment.replace(/[$,]/g, '');
+                      monthlyPayment = parseFloat(paymentStr) || 0;
+                    }
+                    
+                    // Extract total balance
+                    let totalBalance = 0;
+                    if (eq.installment_info?.balance && eq.installment_info.balance !== 'N/A' && eq.installment_info.balance !== 'unknown') {
+                      const balanceStr = eq.installment_info.balance.replace(/[$,]/g, '');
+                      totalBalance = parseFloat(balanceStr) || 0;
+                    } else if (remainingPayments > 0 && monthlyPayment > 0) {
+                      // Calculate balance if not provided
+                      totalBalance = remainingPayments * monthlyPayment;
+                    }
+                    
+                    return {
+                      id: crypto.randomUUID(),
+                      deviceName: eq.model || "Unknown Device",
+                      monthlyPayment: monthlyPayment,
+                      remainingPayments: remainingPayments,
+                      totalBalance: totalBalance,
+                      associatedPhoneNumber: phone.phone_number || "Unknown",
+                      type: normalizedType,
+                    };
+                  })
                 };
                 return lineData;
               })
