@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, File, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { Upload, File, CheckCircle, AlertCircle, Sparkles, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { BillData, Equipment } from '@/interfaces/BillTypes';
+import { BillData, LineData, Equipment } from '@/interfaces/BillTypes';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface BillUploaderProps {
@@ -19,6 +19,34 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'analyzing' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [indeterminate, setIndeterminate] = useState(false);
+
+  useEffect(() => {
+    let progressInterval: NodeJS.Timeout | undefined;
+
+    if (uploadStatus === 'uploading') {
+      setIndeterminate(false);
+      progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 5;
+        });
+      }, 300);
+    } else if (uploadStatus === 'analyzing') {
+      setIndeterminate(true);
+      setUploadProgress(95);
+    } else if (uploadStatus === 'success') {
+      setIndeterminate(false);
+      setUploadProgress(100);
+    }
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [uploadStatus]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -73,22 +101,13 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     
     setFile(file);
     setErrorMessage(null);
+    setUploadProgress(0);
     processBillWithN8n(file);
   };
 
   const processBillWithN8n = async (file: File) => {
     setUploadStatus('uploading');
     setUploadProgress(0);
-    
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 95;
-        }
-        return prev + 5;
-      });
-    }, 200);
     
     try {
       const formData = new FormData();
@@ -156,7 +175,6 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
               })
             };
             
-            setUploadProgress(100);
             setUploadStatus('success');
             onUploadComplete(file.name, transformedData);
             
@@ -185,7 +203,6 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
       }
     } catch (error) {
       console.error("Error during file upload:", error);
-      clearInterval(progressInterval);
       setUploadStatus('error');
       
       const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
@@ -204,6 +221,24 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
     setUploadProgress(0);
     setUploadStatus('idle');
     setErrorMessage(null);
+    setIndeterminate(false);
+  };
+
+  const renderProgressStatus = () => {
+    if (uploadStatus === 'analyzing') {
+      return (
+        <div className="flex items-center">
+          <span className="mr-1">Analyzing bill with AI</span>
+          <Sparkles size={14} className="text-amber-500 animate-pulse" />
+        </div>
+      );
+    } else if (uploadStatus === 'success') {
+      return "Analysis complete!";
+    } else if (uploadStatus === 'error') {
+      return "Upload failed";
+    } else {
+      return `Uploading... ${uploadProgress}%`;
+    }
   };
 
   return (
@@ -276,19 +311,15 @@ const BillUploader: React.FC<BillUploaderProps> = ({ onUploadComplete }) => {
           </div>
           
           <div className="mb-4">
-            <Progress value={uploadProgress} className="h-2" />
+            <Progress 
+              value={uploadProgress} 
+              className="h-2" 
+              indeterminate={indeterminate}
+              indicatorColor={uploadStatus === 'analyzing' ? 'bg-amber-500' : undefined}
+            />
             <div className="flex justify-between mt-1 text-xs text-gray-500">
-              <span>
-                {uploadStatus === 'analyzing' 
-                  ? 'Analyzing bill with AI...' 
-                  : uploadStatus === 'success' 
-                  ? 'Analysis complete!' 
-                  : uploadStatus === 'error'
-                  ? 'Upload failed'
-                  : `Uploading... ${uploadProgress}%`
-                }
-              </span>
-              <span>{uploadStatus === 'analyzing' ? <Sparkles size={14} className="inline text-amber-500 animate-pulse" /> : `${uploadProgress}%`}</span>
+              <span>{renderProgressStatus()}</span>
+              {!indeterminate && <span>{uploadProgress}%</span>}
             </div>
           </div>
           
